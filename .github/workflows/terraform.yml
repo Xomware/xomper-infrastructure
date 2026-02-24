@@ -8,6 +8,10 @@ on:
     branches: [master]
     paths: ['terraform/**', 'lambda/**']
 
+concurrency:
+  group: terraform-xomper-infrastructure
+  cancel-in-progress: false
+
 permissions:
   contents: read
   pull-requests: write
@@ -26,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -48,7 +52,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -input=false -lock=false
         continue-on-error: true
         env:
           TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
