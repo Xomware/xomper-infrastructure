@@ -1,3 +1,15 @@
+variable "access_key" {
+  description = "AWS access key for SSM parameter storage."
+  type        = string
+  sensitive   = true
+}
+
+variable "secret_key" {
+  description = "AWS secret key for SSM parameter storage."
+  type        = string
+  sensitive   = true
+}
+
 variable "app_name" {
   description = "The name for the application."
   default     = "xomper"
