@@ -109,5 +109,5 @@ variable "supabase_anon_key" {
 variable "from_email" {
   description = "Email address to send from"
   type        = string
-  default     = "noreply@xomper.xomware.com"
+  default     = "noreply@xomware.com"
 }
