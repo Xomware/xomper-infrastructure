@@ -1,6 +1,6 @@
 # CloudFront WAF (must be CLOUDFRONT scope)
 module "waf_cloudfront" {
-  source   = "git::https://github.com/domgiordano/waf.git?ref=v1.1.0"
+  source   = "git::https://github.com/Xomware/waf.git?ref=v2.0.0"
   app_name = "${var.app_name}-cloudfront"
   scope    = "CLOUDFRONT"
   tags     = local.standard_tags
@@ -8,7 +8,7 @@ module "waf_cloudfront" {
 
 # API Gateway WAF (REGIONAL scope)
 module "waf_api_gateway" {
-  source     = "git::https://github.com/domgiordano/waf.git?ref=v1.1.0"
+  source     = "git::https://github.com/Xomware/waf.git?ref=v2.0.0"
   app_name   = "${var.app_name}-api-gateway"
   scope      = "REGIONAL"
   rate_limit = 2000
