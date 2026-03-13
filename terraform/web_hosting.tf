@@ -7,7 +7,7 @@ module "web" {
   tags        = local.standard_tags
   kms_key_arn = aws_kms_alias.web_app.target_key_arn
 
-  waf_acl_arn               = module.waf_cloudfront.web_acl_arn
+  waf_acl_arn               = data.aws_ssm_parameter.shared_cloudfront_waf_arn.value
   spa_error_path            = var.custom_error_response_page_path
   geo_restriction_locations = var.us_canada_only ? ["US", "CA"] : []
   enable_cache              = var.enable_cloudfront_cache
