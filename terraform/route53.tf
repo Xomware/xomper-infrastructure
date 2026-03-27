@@ -1,7 +1,7 @@
-# Hosted Zone Data Source
+# Hosted Zone Data Source -- looked up by domain name, not hardcoded ID
 data "aws_route53_zone" "web_zone" {
+  name         = local.domain_name
   private_zone = false
-  zone_id      = "Z0212401124Q11NWHM1D1"
 }
 
 # API Gateway custom domain DNS record

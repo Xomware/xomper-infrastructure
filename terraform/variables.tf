@@ -48,7 +48,6 @@ variable "retain_on_delete" {
   description = "Disables the distribution instead of deleting it when destroying the resource through Terraform."
 }
 
-
 variable "minimum_tls_version" {
   type        = string
   default     = "TLSv1.2_2018"
@@ -60,6 +59,7 @@ variable "enable_cloudfront_cache" {
   default     = true
   description = "This variable controls the cloudfront cache. Setting this to false will set the default_ttl and max_ttl values to zero"
 }
+
 # Lambda
 variable "lambda_runtime" {
   type    = string
@@ -70,19 +70,32 @@ variable "lambda_trace_mode" {
   type    = string
   default = "Active"
 }
+
 variable "lambda_memory_size" {
-  description = "Memory size for Lambda functions in MB"
+  description = "Memory size for API Lambda functions in MB"
   type        = number
   default     = 1024
 }
 
 variable "lambda_timeout" {
-  description = "Timeout for Lambda functions in seconds"
+  description = "Timeout for API Lambda functions in seconds"
   type        = number
   default     = 900
 }
 
-#API
+variable "authorizer_memory_size" {
+  description = "Memory size for the authorizer Lambda in MB"
+  type        = number
+  default     = 256
+}
+
+variable "authorizer_timeout" {
+  description = "Timeout for the authorizer Lambda in seconds"
+  type        = number
+  default     = 30
+}
+
+# API
 variable "api_access_token" {
   description = "API access token"
   sensitive   = true
@@ -99,6 +112,7 @@ variable "supabase_url" {
   type        = string
   sensitive   = true
 }
+
 variable "supabase_anon_key" {
   description = "Supabase Anon Key"
   type        = string
@@ -107,7 +121,20 @@ variable "supabase_anon_key" {
 
 # Email Service
 variable "from_email" {
-  description = "Email address to send from"
+  description = "Email address to send from via SES"
   type        = string
-  default     = "noreply@xomware.com"
+  default     = "noreply@xomper.xomware.com"
+}
+
+# Tags
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+  default     = "production"
+}
+
+variable "owner" {
+  description = "Owner of the infrastructure"
+  type        = string
+  default     = "domgiordano"
 }

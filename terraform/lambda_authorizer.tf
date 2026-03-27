@@ -7,9 +7,9 @@ resource "aws_lambda_function" "authorizer" {
   handler          = "handler.handler"
   layers           = [aws_lambda_layer_version.lambda_layer.arn]
   runtime          = var.lambda_runtime
-  memory_size      = 1024
-  timeout          = 900
-  role             = aws_iam_role.lambda_role.arn
+  memory_size      = var.authorizer_memory_size
+  timeout          = var.authorizer_timeout
+  role             = aws_iam_role.authorizer_role.arn
 
   environment {
     variables = local.lambda_variables
@@ -29,8 +29,7 @@ resource "aws_lambda_function" "authorizer" {
     ]
   }
   depends_on = [
-    aws_iam_role_policy.lambda_role_policy,
-    aws_iam_role.lambda_role
+    aws_iam_role_policy.authorizer_role_policy,
+    aws_iam_role.authorizer_role
   ]
-
 }

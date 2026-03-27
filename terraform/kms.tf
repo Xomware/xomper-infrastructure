@@ -25,10 +25,12 @@ resource "aws_kms_key" "web_app" {
           "Resource" : "*"
         },
         {
-          "Sid" : "Key access for any services with S3 bucket access",
+          "Sid" : "Key access for account roles via S3",
           "Effect" : "Allow",
           "Principal" : {
-            "AWS" : ["*"]
+            "AWS" : [
+              "arn:aws:iam::${local.web_app_account_id}:root"
+            ]
           },
           "Action" : [
             "kms:Encrypt",
