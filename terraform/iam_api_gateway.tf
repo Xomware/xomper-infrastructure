@@ -27,6 +27,8 @@ data "aws_iam_policy_document" "api_gateway_cloudwatch_policy" {
       "logs:GetLogEvents",
       "logs:FilterLogEvents"
     ]
+    # NOTE: Resource "*" is required by AWS for API Gateway CloudWatch logging.
+    # The API Gateway account-level role must have global log permissions.
     resources = ["*"]
   }
 }

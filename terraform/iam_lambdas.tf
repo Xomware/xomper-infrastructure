@@ -1,6 +1,23 @@
-## Lambda IAM role
+# =============================================================================
+# IAM Roles for Lambda Functions
+# Split into: authorizer role, API lambda role
+# =============================================================================
 
+# -----------------------------------------------------------------------------
+# Shared assume role policy for Lambda
+# -----------------------------------------------------------------------------
 data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+# Separate assume role for API lambdas (needs API GW + Step Functions)
+data "aws_iam_policy_document" "api_lambda_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
     principals {
@@ -10,14 +27,81 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
+# -----------------------------------------------------------------------------
+# Authorizer Lambda Role -- minimal permissions
+# -----------------------------------------------------------------------------
+resource "aws_iam_role" "authorizer_role" {
+  name               = "${var.app_name}-authorizer-exec"
+  tags               = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-authorizer-exec" }))
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+data "aws_iam_policy_document" "authorizer_role_policy" {
+  statement {
+    sid    = "CloudWatchLogs"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:log-group:/aws/lambda/${var.app_name}-authorizer*"]
+  }
+
+  statement {
+    sid    = "SSMReadOnly"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath"
+    ]
+    resources = ["arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:parameter/${var.app_name}/*"]
+  }
+
+  statement {
+    sid    = "KMSDecrypt"
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey"
+    ]
+    resources = [
+      "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:key/*"
+    ]
+  }
+
+  statement {
+    sid    = "XRayTracing"
+    effect = "Allow"
+    actions = [
+      "xray:PutTraceSegments",
+      "xray:PutTelemetryRecords",
+      "xray:GetSamplingRules",
+      "xray:GetSamplingTargets"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "authorizer_role_policy" {
+  name   = "${var.app_name}-authorizer-role-policy"
+  role   = aws_iam_role.authorizer_role.id
+  policy = data.aws_iam_policy_document.authorizer_role_policy.json
+}
+
+# -----------------------------------------------------------------------------
+# API Lambda Role -- for email + CRUD lambdas
+# -----------------------------------------------------------------------------
 resource "aws_iam_role" "lambda_role" {
   name               = "${var.app_name}-lambda-exec"
   tags               = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-lambda-exec" }))
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.api_lambda_assume_role.json
 }
 
 data "aws_iam_policy_document" "lambda_role_policy" {
   statement {
+    sid    = "EC2NetworkInterfaces"
     effect = "Allow"
     actions = [
       "ec2:DescribeNetworkInterfaces",
@@ -28,7 +112,9 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
     resources = ["*"]
   }
+
   statement {
+    sid    = "S3BucketAccess"
     effect = "Allow"
     actions = [
       "s3:PutObject",
@@ -49,7 +135,9 @@ data "aws_iam_policy_document" "lambda_role_policy" {
       "${module.web.s3_bucket_arn}/*"
     ]
   }
+
   statement {
+    sid    = "SSMParameters"
     effect = "Allow"
     actions = [
       "ssm:PutParameters",
@@ -61,9 +149,11 @@ data "aws_iam_policy_document" "lambda_role_policy" {
       "ssm:GetParameterHistory",
       "ssm:GetParametersByPath"
     ]
-    resources = ["*"]
+    resources = ["arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:parameter/${var.app_name}/*"]
   }
+
   statement {
+    sid    = "SecretsManagerAccess"
     effect = "Allow"
     actions = [
       "secretsmanager:GetResourcePolicy",
@@ -77,14 +167,18 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
     resources = ["arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:secret:${var.app_name}-*"]
   }
+
   statement {
+    sid    = "SecretsManagerRandom"
     effect = "Allow"
     actions = [
       "secretsmanager:GetRandomPassword"
     ]
     resources = ["*"]
   }
+
   statement {
+    sid    = "CloudWatchLogs"
     effect = "Allow"
     actions = [
       "logs:ListLogDeliveries",
@@ -103,68 +197,27 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
     resources = ["arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:log-group:/aws/lambda/${var.app_name}*"]
   }
+
   statement {
+    sid    = "KMSAccess"
     effect = "Allow"
     actions = [
-      "kms:ListAliases",
-      "kms:ListKeyPolicies",
-      "kms:ListResourceTags",
-      "kms:ListGrants",
-      "kms:ListKeys",
-      "kms:ListRetirableGrants",
-      "kms:DescribeCustomKeyStores",
-      "kms:DescribeKey",
-      "kms:GetKeyPolicy",
-      "kms:GetParametersForImport",
-      "kms:GetKeyRotationStatus",
-      "kms:GetPublicKey",
-      "kms:TagResource",
-      "kms:UntagResource",
-      "kms:CancelKeyDeletion",
-      "kms:ConnectCustomKeyStore",
-      "kms:CreateAlias",
-      "kms:CreateCustomKeyStore",
-      "kms:CreateKey",
       "kms:Decrypt",
-      "kms:DeleteAlias",
-      "kms:DeleteCustomKeyStore",
-      "kms:DeleteImportedKeyMaterial",
-      "kms:DisableKey",
-      "kms:DisableKeyRotation",
-      "kms:DisconnectCustomKeyStore",
-      "kms:EnableKey",
-      "kms:EnableKeyRotation",
       "kms:Encrypt",
       "kms:GenerateDataKey",
-      "kms:GenerateDataKeyPair",
       "kms:GenerateDataKeyWithoutPlainText",
-      "kms:GenerateDataKeyPairWithoutPlainText",
-      "kms:GenerateMac",
-      "kms:GenerateRandom",
-      "kms:ImportKeyMaterial",
+      "kms:DescribeKey",
       "kms:ReEncryptFrom",
       "kms:ReEncryptTo",
-      "kms:ReplicateKey",
-      "kms:ScheduleKeyDeletion",
-      "kms:Sign",
-      "kms:SynchronizeMultiRegionKey",
-      "kms:UpdateAlias",
-      "kms:UpdateCustomKeyStore",
-      "kms:UpdateKeyDescription",
-      "kms:UpdatePrimaryRegion",
-      "kms:Verify",
-      "kms:VerifyMac",
-      "kms:CreateGrant",
-      "kms:PutKeyPolicy",
-      "kms:RetireGrant",
-      "kms:RevokeGrant"
+      "kms:ListAliases"
     ]
     resources = [
-      "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:alias/*",
       "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:key/*"
     ]
   }
+
   statement {
+    sid    = "LambdaInvoke"
     effect = "Allow"
     actions = [
       "lambda:InvokeFunction",
@@ -178,14 +231,18 @@ data "aws_iam_policy_document" "lambda_role_policy" {
       "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:function:${var.app_name}*"
     ]
   }
+
   statement {
+    sid     = "APIGatewayInvoke"
     effect  = "Allow"
     actions = ["execute-api:Invoke"]
     resources = [
       "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:${module.api.rest_api_id}/*/*/*"
     ]
   }
+
   statement {
+    sid    = "XRayTracing"
     effect = "Allow"
     actions = [
       "xray:PutTraceSegments",
@@ -196,7 +253,10 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
     resources = ["*"]
   }
+
+  # DynamoDB runtime access -- no CreateTable/DeleteTable (those are Terraform's job)
   statement {
+    sid    = "DynamoDBRuntime"
     effect = "Allow"
     actions = [
       "dynamodb:BatchGetItem",
@@ -210,23 +270,26 @@ data "aws_iam_policy_document" "lambda_role_policy" {
       "dynamodb:GetShardIterator",
       "dynamodb:GetRecords",
       "dynamodb:DeleteItem",
-      "dynamodb:CreateTable",
-      "dynamodb:DeleteTable",
       "dynamodb:DescribeTable"
     ]
     resources = [
       "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/${var.app_name}*",
-      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/*/index/*",
-      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/*/stream/*"
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/${var.app_name}*/index/*",
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/${var.app_name}*/stream/*"
     ]
   }
+
+  # SES scoped to the verified domain identity
   statement {
+    sid    = "SESSendEmail"
     effect = "Allow"
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail"
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:identity/${local.domain_name}"
+    ]
   }
 }
 
@@ -235,5 +298,3 @@ resource "aws_iam_role_policy" "lambda_role_policy" {
   role   = aws_iam_role.lambda_role.id
   policy = data.aws_iam_policy_document.lambda_role_policy.json
 }
-
-

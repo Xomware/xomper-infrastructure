@@ -68,3 +68,12 @@ resource "aws_route53_record" "ses_mail_from_spf" {
   ttl     = 600
   records = ["v=spf1 include:amazonses.com ~all"]
 }
+
+# DMARC TXT record for email authentication
+resource "aws_route53_record" "dmarc" {
+  zone_id = data.aws_route53_zone.web_zone.zone_id
+  name    = "_dmarc.${local.domain_name}"
+  type    = "TXT"
+  ttl     = 600
+  records = ["v=DMARC1; p=quarantine; rua=mailto:dmarc@${local.domain_name}"]
+}
