@@ -1,6 +1,7 @@
-# Hosted Zone Data Source -- looked up by domain name, not hardcoded ID
+# Hosted Zone Data Source -- looked up by parent domain (xomware.com)
+# Subdomains (xomper.xomware.com) live in the parent zone
 data "aws_route53_zone" "web_zone" {
-  name         = local.domain_name
+  name         = "xomware.com"
   private_zone = false
 }
 
