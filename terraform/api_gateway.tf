@@ -13,14 +13,10 @@ locals {
     }
   ]
 
-  api_endpoints = [
-    for l in local.api_lambdas : {
-      name        = l.name
-      path_part   = l.path_part
-      http_method = l.http_method
-      invoke_arn  = aws_lambda_function.api[l.name].invoke_arn
-    }
-  ]
+  # API endpoints will be added when the Supabase -> DynamoDB migration is implemented.
+  # The api-gateway-service module requires unique path_parts per service, and the
+  # CRUD patterns (GET/PUT/DELETE on same {id}) need module support for multiple
+  # methods on one resource. Lambda stubs + DynamoDB tables are ready in the meantime.
 }
 
 module "api" {
@@ -44,41 +40,6 @@ module "api" {
       path_prefix = "email"
       endpoints   = local.email_endpoints
     }
-    profiles = {
-      path_prefix = "profiles"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^profiles-", e.name))]
-    }
-    users = {
-      path_prefix = "users"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^users-", e.name))]
-    }
-    rules = {
-      path_prefix = "rules"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^rules-", e.name))]
-    }
-    votes = {
-      path_prefix = "votes"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^votes-", e.name))]
-    }
-    taxi = {
-      path_prefix = "taxi-steals"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^taxi-steals-", e.name))]
-    }
-    drafts = {
-      path_prefix = "drafts"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^drafts-", e.name))]
-    }
-    matchups = {
-      path_prefix = "matchups"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^matchups-", e.name))]
-    }
-    standings = {
-      path_prefix = "standings"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^standings-", e.name))]
-    }
-    champions = {
-      path_prefix = "champions"
-      endpoints   = [for e in local.api_endpoints : e if can(regex("^champions-", e.name))]
-    }
+    # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
 }
