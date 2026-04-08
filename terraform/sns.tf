@@ -7,6 +7,7 @@ resource "aws_sns_platform_application" "apns" {
   name                     = "${var.app_name}-apns"
   platform                 = "APNS"
   platform_credential      = var.apns_platform_credential
+  platform_principal       = var.apns_key_id
   apple_platform_team_id   = var.apns_team_id
   apple_platform_bundle_id = var.apns_bundle_id
 
