@@ -50,6 +50,10 @@ locals {
     # League Champions
     { name = "champions-get", description = "Get league champions", path_part = "{league_id}", http_method = "GET" },
     { name = "champions-create", description = "Add champion record", path_part = "create", http_method = "POST" },
+
+    # Device Registration (Push Notifications)
+    { name = "device-register", description = "Register device for push notifications", path_part = "register", http_method = "POST" },
+    { name = "device-unregister", description = "Unregister device from push notifications", path_part = "unregister", http_method = "POST" },
   ]
 }
 

@@ -279,6 +279,23 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
   }
 
+  # SNS Push Notifications
+  statement {
+    sid    = "SNSPushNotifications"
+    effect = "Allow"
+    actions = [
+      "sns:CreatePlatformEndpoint",
+      "sns:DeleteEndpoint",
+      "sns:GetEndpointAttributes",
+      "sns:SetEndpointAttributes",
+      "sns:Publish"
+    ]
+    resources = [
+      aws_sns_platform_application.apns.arn,
+      "arn:aws:sns:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:endpoint/APNS/${var.app_name}-apns/*"
+    ]
+  }
+
   # SES scoped to the verified domain identity
   statement {
     sid    = "SESSendEmail"

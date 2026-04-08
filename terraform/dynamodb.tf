@@ -260,3 +260,32 @@ resource "aws_dynamodb_table" "league_champions" {
 
   tags = merge(local.standard_tags, { "name" = "${var.app_name}-league-champions" })
 }
+
+# --- Device Tokens (Push Notifications) ---
+resource "aws_dynamodb_table" "device_tokens" {
+  name         = "${var.app_name}-device-tokens"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+  range_key    = "device_token"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "device_token"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = local.dynamodb_kms_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = merge(local.standard_tags, { "name" = "${var.app_name}-device-tokens" })
+}

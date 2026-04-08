@@ -13,10 +13,14 @@ locals {
     }
   ]
 
-  # API endpoints will be added when the Supabase -> DynamoDB migration is implemented.
-  # The api-gateway-service module requires unique path_parts per service, and the
-  # CRUD patterns (GET/PUT/DELETE on same {id}) need module support for multiple
-  # methods on one resource. Lambda stubs + DynamoDB tables are ready in the meantime.
+  device_endpoints = [
+    for l in local.api_lambdas : {
+      name        = l.name
+      path_part   = l.path_part
+      http_method = l.http_method
+      invoke_arn  = aws_lambda_function.api[l.name].invoke_arn
+    } if startswith(l.name, "device-")
+  ]
 }
 
 module "api" {
@@ -39,6 +43,10 @@ module "api" {
     email = {
       path_prefix = "email"
       endpoints   = local.email_endpoints
+    }
+    device = {
+      path_prefix = "device"
+      endpoints   = local.device_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
