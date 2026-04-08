@@ -13,9 +13,9 @@ locals {
 
   # LAMBDAS
   lambda_variables = {
-    APP_NAME           = var.app_name
-    DYNAMODB_KMS_ALIAS = aws_kms_alias.xomper_dynamodb.name
-    AWS_ACCOUNT_ID     = data.aws_caller_identity.web_app_account.account_id
+    APP_NAME             = var.app_name
+    DYNAMODB_KMS_ALIAS   = aws_kms_alias.xomper_dynamodb.name
+    AWS_ACCOUNT_ID       = data.aws_caller_identity.web_app_account.account_id
     FROM_EMAIL           = var.from_email
     SNS_PLATFORM_APP_ARN = aws_sns_platform_application.apns.arn
     DEVICE_TOKENS_TABLE  = aws_dynamodb_table.device_tokens.name
