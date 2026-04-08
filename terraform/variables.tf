@@ -119,6 +119,31 @@ variable "supabase_anon_key" {
   sensitive   = true
 }
 
+# Push Notifications (APNs)
+variable "apns_team_id" {
+  description = "Apple Developer Team ID for APNs"
+  type        = string
+  sensitive   = true
+}
+
+variable "apns_key_id" {
+  description = "APNs Auth Key ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "apns_bundle_id" {
+  description = "iOS app bundle identifier"
+  type        = string
+  default     = "com.Xomware.Xomper"
+}
+
+variable "apns_platform_credential" {
+  description = "APNs .p8 auth key contents"
+  type        = string
+  sensitive   = true
+}
+
 # Email Service
 variable "from_email" {
   description = "Email address to send from via SES"
