@@ -261,6 +261,41 @@ resource "aws_dynamodb_table" "league_champions" {
   tags = merge(local.standard_tags, { "name" = "${var.app_name}-league-champions" })
 }
 
+# --- Notification Activity Log (admin portal) ---
+# Drives the iOS Admin portal's activity feed. Every push +
+# email send writes a row from inside ses_helper.send_email and
+# sns_helper.send_push_to_users. PK = day (S, "YYYY-MM-DD"),
+# SK = id (S, "{epoch_ms:013d}#{uuid_short}") — sorts newest-last
+# inside the partition so reads with ScanIndexForward=false stream
+# newest-first.
+resource "aws_dynamodb_table" "notification_log" {
+  name         = "${var.app_name}-notification-log"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "day"
+  range_key    = "id"
+
+  attribute {
+    name = "day"
+    type = "S"
+  }
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = local.dynamodb_kms_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = merge(local.standard_tags, { "name" = "${var.app_name}-notification-log" })
+}
+
 # --- World Cup Snapshots (per-week clinch state) ---
 # Drives `notif_worldcup_movement` — the lambda diffs the current
 # week's computed clinch status against the prior snapshot to decide
