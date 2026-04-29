@@ -62,6 +62,7 @@ jobs:
           TF_VAR_api_secret_key: ${{ secrets.API_SECRET_KEY }}
           TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
           TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
+          TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
           TF_VAR_apns_team_id: ${{ secrets.APNS_TEAM_ID }}
           TF_VAR_apns_key_id: ${{ secrets.APNS_KEY_ID }}
           TF_VAR_apns_platform_credential: ${{ secrets.APNS_PLATFORM_CREDENTIAL }}
@@ -104,6 +105,7 @@ jobs:
           TF_VAR_api_secret_key: ${{ secrets.API_SECRET_KEY }}
           TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
           TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
+          TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
           TF_VAR_apns_team_id: ${{ secrets.APNS_TEAM_ID }}
           TF_VAR_apns_key_id: ${{ secrets.APNS_KEY_ID }}
           TF_VAR_apns_platform_credential: ${{ secrets.APNS_PLATFORM_CREDENTIAL }}

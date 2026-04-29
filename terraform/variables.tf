@@ -119,6 +119,12 @@ variable "supabase_anon_key" {
   sensitive   = true
 }
 
+variable "supabase_service_key" {
+  description = "Supabase service-role key — read access to RLS-protected whitelisted_* tables for scheduled notification lambdas."
+  type        = string
+  sensitive   = true
+}
+
 # Push Notifications (APNs)
 variable "apns_team_id" {
   description = "Apple Developer Team ID for APNs"

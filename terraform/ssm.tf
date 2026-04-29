@@ -84,3 +84,14 @@ resource "aws_ssm_parameter" "api_supabase_anon_key" {
     ignore_changes = [tags, tags_all]
   }
 }
+
+resource "aws_ssm_parameter" "api_supabase_service_key" {
+  name        = "/${var.app_name}/api/SUPABASE_SERVICE_KEY"
+  description = "Supabase service-role key — used by scheduled notification lambdas to read whitelisted_leagues + whitelisted_users (RLS-bypassing). Do NOT ship to clients."
+  type        = "SecureString"
+  value       = var.supabase_service_key
+
+  lifecycle {
+    ignore_changes = [tags, tags_all]
+  }
+}
