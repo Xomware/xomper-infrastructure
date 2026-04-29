@@ -261,6 +261,39 @@ resource "aws_dynamodb_table" "league_champions" {
   tags = merge(local.standard_tags, { "name" = "${var.app_name}-league-champions" })
 }
 
+# --- World Cup Snapshots (per-week clinch state) ---
+# Drives `notif_worldcup_movement` — the lambda diffs the current
+# week's computed clinch status against the prior snapshot to decide
+# which managers get a transition push. PK = league_id#season,
+# SK = week, item value is the per-team status map.
+resource "aws_dynamodb_table" "worldcup_snapshots" {
+  name         = "${var.app_name}-worldcup-snapshots"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "league_id_season"
+  range_key    = "week"
+
+  attribute {
+    name = "league_id_season"
+    type = "S"
+  }
+
+  attribute {
+    name = "week"
+    type = "N"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = local.dynamodb_kms_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = merge(local.standard_tags, { "name" = "${var.app_name}-worldcup-snapshots" })
+}
+
 # --- Device Tokens (Push Notifications) ---
 resource "aws_dynamodb_table" "device_tokens" {
   name         = "${var.app_name}-device-tokens"
