@@ -54,6 +54,13 @@ locals {
     # Device Registration (Push Notifications)
     { name = "device-register", description = "Register device for push notifications", path_part = "register", http_method = "POST" },
     { name = "device-unregister", description = "Unregister device from push notifications", path_part = "unregister", http_method = "POST" },
+
+    # Admin Portal (notification activity log + test send)
+    # Backend dirs:
+    #   lambdas/api_admin_list_notifications/  → xomper-api-admin-list-notifications
+    #   lambdas/api_admin_test_send/           → xomper-api-admin-test-send
+    { name = "admin-list-notifications", description = "Admin: list recent push + email activity", path_part = "notifications", http_method = "GET" },
+    { name = "admin-test-send", description = "Admin: fire a sample push + email back to caller", path_part = "test-send", http_method = "POST" },
   ]
 }
 
