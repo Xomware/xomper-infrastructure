@@ -329,6 +329,55 @@ resource "aws_dynamodb_table" "worldcup_snapshots" {
   tags = merge(local.standard_tags, { "name" = "${var.app_name}-worldcup-snapshots" })
 }
 
+# --- AI Reports (AI Review F0) ---
+# Stores Claude-generated league reports (post-draft, preseason, weekly).
+# PK = "LEAGUE#<league_id>" (S), SK = "REPORT#<report_type>#<period>" (S).
+# GSI `created-at-index` reuses PK and ranges on `created_at` (ISO 8601)
+# for newest-first archive queries via the /ai-reports/list endpoint.
+# Body lives in `body_markdown` (S); metadata Map carries model, prompt
+# version, token usage, etc. No CreateTable/DeleteTable IAM — runtime
+# lambda role only reads + writes via the existing `${var.app_name}*`
+# wildcard in `iam_lambdas.tf:DynamoDBRuntime`.
+resource "aws_dynamodb_table" "ai_reports" {
+  name         = "${var.app_name}-ai-reports"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "pk"
+  range_key    = "sk"
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+
+  attribute {
+    name = "sk"
+    type = "S"
+  }
+
+  attribute {
+    name = "created_at"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "created-at-index"
+    hash_key        = "pk"
+    range_key       = "created_at"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = local.dynamodb_kms_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = merge(local.standard_tags, { "name" = "${var.app_name}-ai-reports" })
+}
+
 # --- Device Tokens (Push Notifications) ---
 resource "aws_dynamodb_table" "device_tokens" {
   name         = "${var.app_name}-device-tokens"

@@ -125,6 +125,12 @@ variable "supabase_service_key" {
   sensitive   = true
 }
 
+variable "anthropic_api_key" {
+  description = "Anthropic API key for the AI Review feature. Sourced from the ANTHROPIC_API_KEY GitHub Secret on the xomper-infrastructure repo via TF_VAR_anthropic_api_key in the terraform.yml workflow."
+  type        = string
+  sensitive   = true
+}
+
 # Push Notifications (APNs)
 variable "apns_team_id" {
   description = "Apple Developer Team ID for APNs"

@@ -66,6 +66,7 @@ jobs:
           TF_VAR_apns_team_id: ${{ secrets.APNS_TEAM_ID }}
           TF_VAR_apns_key_id: ${{ secrets.APNS_KEY_ID }}
           TF_VAR_apns_platform_credential: ${{ secrets.APNS_PLATFORM_CREDENTIAL }}
+          TF_VAR_anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: Post Plan to PR
         if: github.event_name == 'pull_request'
@@ -109,3 +110,4 @@ jobs:
           TF_VAR_apns_team_id: ${{ secrets.APNS_TEAM_ID }}
           TF_VAR_apns_key_id: ${{ secrets.APNS_KEY_ID }}
           TF_VAR_apns_platform_credential: ${{ secrets.APNS_PLATFORM_CREDENTIAL }}
+          TF_VAR_anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

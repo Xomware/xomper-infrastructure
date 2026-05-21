@@ -149,6 +149,9 @@ data "aws_iam_policy_document" "lambda_role_policy" {
       "ssm:GetParameterHistory",
       "ssm:GetParametersByPath"
     ]
+    # NOTE: AI Review F0 — covered by the /${var.app_name}/* wildcard.
+    # The `/xomper/api/ANTHROPIC_API_KEY` SecureString sits under this prefix
+    # and is read at runtime by `claude_helper.py` via ssm:GetParameter.
     resources = ["arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:parameter/${var.app_name}/*"]
   }
 
@@ -255,6 +258,9 @@ data "aws_iam_policy_document" "lambda_role_policy" {
   }
 
   # DynamoDB runtime access -- no CreateTable/DeleteTable (those are Terraform's job)
+  # NOTE: AI Review F0 — `xomper-ai-reports` + its `created-at-index` GSI are
+  # covered by the `${var.app_name}*` table wildcard and the `*/index/*`
+  # wildcard below. No additional statement needed.
   statement {
     sid    = "DynamoDBRuntime"
     effect = "Allow"

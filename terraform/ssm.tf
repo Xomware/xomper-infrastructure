@@ -95,3 +95,20 @@ resource "aws_ssm_parameter" "api_supabase_service_key" {
     ignore_changes = [tags, tags_all]
   }
 }
+
+# ANTHROPIC (AI Review F0)
+# Value sourced from var.anthropic_api_key, which CI feeds from the
+# ANTHROPIC_API_KEY GitHub Secret on the xomper-infrastructure repo (see the
+# TF_VAR_anthropic_api_key entry in .github/workflows/terraform.yml). Rotate
+# by updating the GitHub Secret and triggering a new apply — never edit the
+# parameter value via the AWS console or CLI.
+resource "aws_ssm_parameter" "anthropic_api_key" {
+  name        = "/${var.app_name}/api/ANTHROPIC_API_KEY"
+  description = "Anthropic API key for AI Review (F0). Managed by Terraform; value sourced from ANTHROPIC_API_KEY GitHub Secret."
+  type        = "SecureString"
+  value       = var.anthropic_api_key
+
+  lifecycle {
+    ignore_changes = [tags, tags_all]
+  }
+}
