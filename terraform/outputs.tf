@@ -78,6 +78,18 @@ output "dynamodb_table_arns" {
   }
 }
 
+# AI Review (F0) — direct table name/arn outputs for downstream reference
+# (backend deploy scripts, future cross-stack lookups, manual debugging).
+output "ai_reports_table_name" {
+  description = "DynamoDB table name for AI Review reports"
+  value       = aws_dynamodb_table.ai_reports.name
+}
+
+output "ai_reports_table_arn" {
+  description = "DynamoDB table ARN for AI Review reports"
+  value       = aws_dynamodb_table.ai_reports.arn
+}
+
 # Route53
 output "route53_zone_id" {
   description = "Route53 hosted zone ID"

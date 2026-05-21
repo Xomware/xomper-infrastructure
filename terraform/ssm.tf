@@ -95,3 +95,21 @@ resource "aws_ssm_parameter" "api_supabase_service_key" {
     ignore_changes = [tags, tags_all]
   }
 }
+
+# ANTHROPIC (AI Review F0)
+# Terraform creates this SecureString with a placeholder value. The real key
+# is set manually via the AWS console post-apply. `ignore_changes = [value]`
+# means future plans will NOT revert the manually-set value back to the
+# placeholder. The lambda code fetches via ssm:GetParameter at runtime and
+# caches at the module level — a console update is picked up on the next
+# lambda cold start with no redeploy required.
+resource "aws_ssm_parameter" "anthropic_api_key" {
+  name        = "/${var.app_name}/api/ANTHROPIC_API_KEY"
+  description = "Anthropic API key for AI Review (F0). Value managed manually via AWS console — Terraform only provisions the parameter."
+  type        = "SecureString"
+  value       = var.anthropic_api_key
+
+  lifecycle {
+    ignore_changes = [tags, tags_all, value]
+  }
+}

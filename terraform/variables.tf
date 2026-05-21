@@ -125,6 +125,19 @@ variable "supabase_service_key" {
   sensitive   = true
 }
 
+# Anthropic (AI Review F0)
+# NOTE: The real key value is set manually via the AWS console after `terraform
+# apply`. The SSM resource for this var has `lifecycle.ignore_changes = [value]`
+# so subsequent plans do not revert the console-edited value back to the
+# placeholder. Default = placeholder so `terraform plan/apply` does not require
+# an interactive prompt or a tfvars entry on bootstrap.
+variable "anthropic_api_key" {
+  description = "Anthropic API key for the AI Review feature. Placeholder by default — set the real value in AWS SSM Parameter Store via the console after apply."
+  type        = string
+  sensitive   = true
+  default     = "PLACEHOLDER_SET_VIA_CONSOLE"
+}
+
 # Push Notifications (APNs)
 variable "apns_team_id" {
   description = "Apple Developer Team ID for APNs"

@@ -61,6 +61,16 @@ locals {
     #   lambdas/api_admin_test_send/           → xomper-api-admin-test-send
     { name = "admin-list-notifications", description = "Admin: list recent push + email activity", path_part = "notifications", http_method = "GET" },
     { name = "admin-test-send", description = "Admin: fire a sample push + email back to caller", path_part = "test-send", http_method = "POST" },
+
+    # AI Review (F0) — paginated archive + latest-by-type reads.
+    # Routes land at /ai-reports/latest and /ai-reports/list under the new
+    # `ai-reports` API GW service block (see api_gateway.tf). Query params
+    # are documented in the backend handlers; iOS hits both via XomperAPIClient.
+    # Backend dirs:
+    #   lambdas/api_ai_reports_latest/  → xomper-api-ai-reports-latest
+    #   lambdas/api_ai_reports_list/    → xomper-api-ai-reports-list
+    { name = "ai-reports-latest", description = "AI Review: latest report by type (query ?type=postDraft|preseason|weekly)", path_part = "latest", http_method = "GET" },
+    { name = "ai-reports-list", description = "AI Review: paginated archive (query ?type=&limit=&cursor=)", path_part = "list", http_method = "GET" },
   ]
 }
 

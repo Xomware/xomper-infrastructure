@@ -30,6 +30,15 @@ locals {
       invoke_arn  = aws_lambda_function.api[l.name].invoke_arn
     } if startswith(l.name, "admin-")
   ]
+
+  ai_reports_endpoints = [
+    for l in local.api_lambdas : {
+      name        = l.name
+      path_part   = l.path_part
+      http_method = l.http_method
+      invoke_arn  = aws_lambda_function.api[l.name].invoke_arn
+    } if startswith(l.name, "ai-reports-")
+  ]
 }
 
 module "api" {
@@ -60,6 +69,10 @@ module "api" {
     admin = {
       path_prefix = "admin"
       endpoints   = local.admin_endpoints
+    }
+    ai_reports = {
+      path_prefix = "ai-reports"
+      endpoints   = local.ai_reports_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
