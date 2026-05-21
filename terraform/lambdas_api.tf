@@ -72,6 +72,14 @@ locals {
     # handler (mirrors api_admin_test_send admin check).
     { name = "admin-ai-review-postdraft-trigger", description = "Admin: trigger post-draft AI review generation (body: dry_run, force)", path_part = "ai-review-postdraft-trigger", http_method = "POST" },
 
+    # AI Review (F2) — admin-triggered preseason report generator.
+    # Same wiring + auth model as F1's post-draft trigger above. Path is flattened
+    # under `/admin/*` for the same api-gateway-service v2.2.0 reason. Backend dir:
+    #   lambdas/api_admin_ai_review_preseason_trigger/  → xomper-api-admin-ai-review-preseason-trigger
+    # IAM coverage: existing wildcards on xomper-lambda-exec (Dynamo R/W, SSM read,
+    # SES, SNS) already cover the new lambda — no IAM changes needed.
+    { name = "admin-ai-review-preseason-trigger", description = "AI Review: admin-triggered preseason report (dry-run first, then broadcast)", path_part = "ai-review-preseason-trigger", http_method = "POST" },
+
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
     # `ai-reports` API GW service block (see api_gateway.tf). Query params
