@@ -378,6 +378,49 @@ resource "aws_dynamodb_table" "ai_reports" {
   tags = merge(local.standard_tags, { "name" = "${var.app_name}-ai-reports" })
 }
 
+# --- AI Memories (AI Review F3) ---
+# Stores Claude-generated season memories appended every Tuesday by the
+# weekly recap orchestrator. Lookback (default 6 newest) is injected into
+# the next week's user prompt so the recap carries continuity.
+# PK = "LEAGUE#<league_id>#SEASON#<year>" (S) — season-scoped so a fresh
+# season (e.g. 2027) starts empty without manual purge.
+# SK = "MEMORY#<week:02d>#<memory_id>" (S) where memory_id is a uuid4 hex.
+# Additional attributes (memory_id, season, week, manager_user_id, text,
+# sentiment, created_at) are item attributes only — not part of the key
+# schema, so they don't need declaring on the resource.
+# No GSI in v1 — the only access pattern is "Query PK + SK begins_with
+# MEMORY# with ScanIndexForward=false, Limit=N" which works on the base
+# table. Add a GSI in v1.1 only if a per-manager query becomes a thing.
+# IAM coverage: existing `${var.app_name}*` wildcard in iam_lambdas.tf:
+# DynamoDBRuntime covers R/W on this table.
+resource "aws_dynamodb_table" "ai_memories" {
+  name         = "${var.app_name}-ai-memories"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "pk"
+  range_key    = "sk"
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+
+  attribute {
+    name = "sk"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = local.dynamodb_kms_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = merge(local.standard_tags, { "name" = "${var.app_name}-ai-memories" })
+}
+
 # --- Device Tokens (Push Notifications) ---
 resource "aws_dynamodb_table" "device_tokens" {
   name         = "${var.app_name}-device-tokens"
