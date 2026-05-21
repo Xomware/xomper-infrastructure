@@ -261,6 +261,9 @@ data "aws_iam_policy_document" "lambda_role_policy" {
   # NOTE: AI Review F0 — `xomper-ai-reports` + its `created-at-index` GSI are
   # covered by the `${var.app_name}*` table wildcard and the `*/index/*`
   # wildcard below. No additional statement needed.
+  # NOTE: AI Review F3 — `xomper-ai-memories` (no GSI) is covered by the same
+  # `${var.app_name}*` table wildcard. R/W from notif_ai_review_weekly and
+  # api_admin_ai_review_weekly_trigger lambdas flows through this statement.
   statement {
     sid    = "DynamoDBRuntime"
     effect = "Allow"

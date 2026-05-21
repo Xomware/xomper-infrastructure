@@ -48,6 +48,22 @@ locals {
       cron_expression   = "cron(0 10 ? * TUE *)" # Tue 10:00 ET, after recap
       schedule_timezone = "America/New_York"
     },
+    # AI Review (F3) — weekly recap cron.
+    # Fires Tue 14:00 ET — far enough past Monday Night Football (~23:30 ET
+    # Mon) for Sleeper's nfl_state.week to have incremented, and 5h past
+    # `notif-weekly-recap` (09:00 ET) so the two products land separately
+    # in inboxes. ET is interpreted directly by EventBridge via
+    # schedule_timezone, so no DST math needed (same convention as the
+    # other five entries above).
+    # IAM coverage: existing wildcards in iam_lambdas.tf cover the new
+    # function name + Dynamo R/W on xomper-ai-memories / xomper-ai-reports.
+    {
+      name              = "notif-ai-review-weekly"
+      handler_dir       = "notif_ai_review_weekly"
+      description       = "Tuesday afternoon: AI-generated weekly league newsletter (Claude Haiku)"
+      cron_expression   = "cron(0 14 ? * TUE *)" # Tue 14:00 ET, post-MNF
+      schedule_timezone = "America/New_York"
+    },
   ]
 
   # Same env block as locals.lambda_variables but kept separate so we can

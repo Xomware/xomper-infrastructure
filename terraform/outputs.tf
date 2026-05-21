@@ -90,6 +90,17 @@ output "ai_reports_table_arn" {
   value       = aws_dynamodb_table.ai_reports.arn
 }
 
+# AI Review (F3) — season-memory table outputs (mirror reports table above)
+output "ai_memories_table_name" {
+  description = "DynamoDB table name for AI Review season memories"
+  value       = aws_dynamodb_table.ai_memories.name
+}
+
+output "ai_memories_table_arn" {
+  description = "DynamoDB table ARN for AI Review season memories"
+  value       = aws_dynamodb_table.ai_memories.arn
+}
+
 # Route53
 output "route53_zone_id" {
   description = "Route53 hosted zone ID"

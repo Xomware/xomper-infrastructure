@@ -80,6 +80,14 @@ locals {
     # SES, SNS) already cover the new lambda — no IAM changes needed.
     { name = "admin-ai-review-preseason-trigger", description = "AI Review: admin-triggered preseason report (dry-run first, then broadcast)", path_part = "ai-review-preseason-trigger", http_method = "POST" },
 
+    # AI Review (F3) — admin-triggered weekly recap (cron retries + dry-run calibration).
+    # Same wiring + auth model as F1/F2 above. Flattened under `/admin/*` for the
+    # same api-gateway-service v2.2.0 reason. Backend dir:
+    #   lambdas/api_admin_ai_review_weekly_trigger/  → xomper-api-admin-ai-review-weekly-trigger
+    # IAM coverage: existing wildcards on xomper-lambda-exec already cover the new
+    # lambda + xomper-ai-memories R/W — no IAM changes needed.
+    { name = "admin-ai-review-weekly-trigger", description = "AI Review: weekly recap admin trigger (cron retries + dry-run calibration)", path_part = "ai-review-weekly-trigger", http_method = "POST" },
+
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
     # `ai-reports` API GW service block (see api_gateway.tf). Query params
