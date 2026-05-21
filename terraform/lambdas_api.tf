@@ -57,10 +57,20 @@ locals {
 
     # Admin Portal (notification activity log + test send)
     # Backend dirs:
-    #   lambdas/api_admin_list_notifications/  → xomper-api-admin-list-notifications
-    #   lambdas/api_admin_test_send/           → xomper-api-admin-test-send
+    #   lambdas/api_admin_list_notifications/             → xomper-api-admin-list-notifications
+    #   lambdas/api_admin_test_send/                      → xomper-api-admin-test-send
+    #   lambdas/api_admin_ai_review_postdraft_trigger/    → xomper-api-admin-ai-review-postdraft-trigger
     { name = "admin-list-notifications", description = "Admin: list recent push + email activity", path_part = "notifications", http_method = "GET" },
     { name = "admin-test-send", description = "Admin: fire a sample push + email back to caller", path_part = "test-send", http_method = "POST" },
+
+    # AI Review (F1) — admin-triggered post-draft report generator.
+    # The api-gateway-service v2.2.0 module supports only `path_prefix` + `path_part`
+    # (two-segment paths). Per the F1 plan's Step 3 fallback, the route is flattened
+    # under the existing `admin` service block as `/admin/ai-review-postdraft-trigger`
+    # instead of the deeper `/admin/ai-review/post-draft/trigger`. JWT + admin gate
+    # are enforced by the shared authorizer (lambdas/authorizer/) and the backend
+    # handler (mirrors api_admin_test_send admin check).
+    { name = "admin-ai-review-postdraft-trigger", description = "Admin: trigger post-draft AI review generation (body: dry_run, force)", path_part = "ai-review-postdraft-trigger", http_method = "POST" },
 
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
