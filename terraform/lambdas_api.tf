@@ -100,6 +100,20 @@ locals {
     { name = "admin-email-test", description = "Admin: send a single AI Review report to one whitelisted user", path_part = "email-test", http_method = "POST" },
     { name = "admin-email-test-recipients", description = "Admin: list whitelisted users for the test-email picker", path_part = "email-test-recipients", http_method = "GET" },
 
+    # Admin Portal (F3) — toggle is_redacted / do_not_broadcast metadata flags on
+    # an AI report row. The api-gateway-service v2.2.0 module supports only
+    # `path_prefix` + `path_part` (two-segment paths) so the route is flattened
+    # under the existing `admin` service block as `/admin/reports-flag` (mirrors
+    # the F1/F2 admin-trigger flatten pattern, e.g. ai-review-postdraft-trigger).
+    # league_id / report_type / period are passed in the JSON body instead of
+    # path params. Same JWT + admin gate as other /admin/* routes (shared
+    # authorizer + handler-level require_admin). Backend dir:
+    #   lambdas/api_admin_reports_flag/  → xomper-api-admin-reports-flag
+    # IAM coverage: existing wildcards on xomper-lambda-exec (Dynamo R/W on
+    # xomper-ai-reports, SSM read, Supabase via env) already cover the new
+    # lambda — no IAM changes needed.
+    { name = "admin-reports-flag", description = "Admin: toggle is_redacted / do_not_broadcast on an AI report row (body: league_id, report_type, period, flag, value)", path_part = "reports-flag", http_method = "POST" },
+
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
     # `ai-reports` API GW service block (see api_gateway.tf). Query params
