@@ -114,6 +114,28 @@ locals {
     # lambda — no IAM changes needed.
     { name = "admin-reports-flag", description = "Admin: toggle is_redacted / do_not_broadcast on an AI report row (body: league_id, report_type, period, flag, value)", path_part = "reports-flag", http_method = "POST" },
 
+    # Admin Portal (F4) — Table Editor + Audit Log. Typed writes on the
+    # whitelisted_users / whitelisted_leagues Supabase tables plus a paginated
+    # audit feed read of the `admin_audit` Supabase table. Routes are flattened
+    # under the existing `admin` service block per the api-gateway-service
+    # v2.2.0 constraint (single segment under /admin), mirroring the F1/F3
+    # flatten pattern (email-test, reports-flag). Same JWT + admin gate as
+    # other /admin/* routes (shared authorizer + handler-level require_admin).
+    # The `admin_audit` Supabase table is created out-of-band via a manual SQL
+    # migration applied through the Supabase dashboard — no Terraform changes
+    # for the table itself. Backend dirs:
+    #   lambdas/api_admin_users_update/    → xomper-api-admin-users-update
+    #   lambdas/api_admin_leagues_update/  → xomper-api-admin-leagues-update
+    #   lambdas/api_admin_leagues_list/    → xomper-api-admin-leagues-list
+    #   lambdas/api_admin_audit_list/      → xomper-api-admin-audit-list
+    # IAM coverage: existing wildcards on xomper-lambda-exec (Dynamo R/W, SSM
+    # read, SES, Supabase via env) already cover the new lambdas — no IAM
+    # changes needed.
+    { name = "admin-users-update", description = "Admin: update an allowlisted-field subset of a whitelisted_users row (body: user_id, fields)", path_part = "users-update", http_method = "POST" },
+    { name = "admin-leagues-update", description = "Admin: update an allowlisted-field subset of a whitelisted_leagues row (body: league_id, fields)", path_part = "leagues-update", http_method = "POST" },
+    { name = "admin-leagues-list", description = "Admin: list whitelisted_leagues (full rows for the Tables editor)", path_part = "leagues-list", http_method = "GET" },
+    { name = "admin-audit-list", description = "Admin: paginated audit feed from admin_audit (query ?limit=&cursor=&action=&actor_user_id=)", path_part = "audit-list", http_method = "GET" },
+
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
     # `ai-reports` API GW service block (see api_gateway.tf). Query params
