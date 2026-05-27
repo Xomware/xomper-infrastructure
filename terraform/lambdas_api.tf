@@ -88,6 +88,18 @@ locals {
     # lambda + xomper-ai-memories R/W — no IAM changes needed.
     { name = "admin-ai-review-weekly-trigger", description = "AI Review: weekly recap admin trigger (cron retries + dry-run calibration)", path_part = "ai-review-weekly-trigger", http_method = "POST" },
 
+    # Admin Portal (F1) — test email sender + recipients picker.
+    # Lets an admin re-send any of the latest AI Review reports to a single
+    # whitelisted user without polluting broadcast state. Same JWT + admin gate
+    # as the other /admin/* routes (shared authorizer + handler-level
+    # require_admin). Backend dirs:
+    #   lambdas/api_admin_email_test/             → xomper-api-admin-email-test
+    #   lambdas/api_admin_email_test_recipients/  → xomper-api-admin-email-test-recipients
+    # IAM coverage: existing wildcards on xomper-lambda-exec (Dynamo R/W, SSM
+    # read, SES, Supabase via env) already cover both lambdas — no IAM changes.
+    { name = "admin-email-test", description = "Admin: send a single AI Review report to one whitelisted user", path_part = "email-test", http_method = "POST" },
+    { name = "admin-email-test-recipients", description = "Admin: list whitelisted users for the test-email picker", path_part = "email-test-recipients", http_method = "GET" },
+
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
     # `ai-reports` API GW service block (see api_gateway.tf). Query params
