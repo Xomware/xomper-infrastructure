@@ -136,6 +136,22 @@ locals {
     { name = "admin-leagues-list", description = "Admin: list whitelisted_leagues (full rows for the Tables editor)", path_part = "leagues-list", http_method = "GET" },
     { name = "admin-audit-list", description = "Admin: paginated audit feed from admin_audit (query ?limit=&cursor=&action=&actor_user_id=)", path_part = "audit-list", http_method = "GET" },
 
+    # Admin Portal (F5) — CloudWatch Log Viewer. Reads a tail of admin-relevant
+    # lambda log groups via `logs:FilterLogEvents` and returns paginated events
+    # with server-side PII redaction (email / Sleeper user id / Anthropic key).
+    # Route flattened under the existing `admin` service block per the same
+    # api-gateway-service v2.2.0 constraint as F1/F3/F4. Same JWT + admin gate
+    # as other /admin/* routes (shared authorizer + handler-level require_admin).
+    # Backend dir:
+    #   lambdas/api_admin_logs_query/  → xomper-api-admin-logs-query
+    # IAM coverage: a dedicated explicit policy attached to the shared
+    # xomper-lambda-exec role enumerates the 10 allowlisted log-group ARNs
+    # (Option B from the F5 plan — see iam_admin_logs.tf). The handler also
+    # enforces the same allowlist at runtime via ADMIN_LOG_GROUP_ALLOWLIST in
+    # lambdas/common/constants.py so any non-allowlisted log_group query param
+    # returns 400 before boto3 is hit.
+    { name = "admin-logs-query", description = "Admin: tail CloudWatch log events for an allowlisted lambda log group (query ?log_group=&level=&search=&limit=&next_token=)", path_part = "logs-query", http_method = "GET" },
+
     # AI Review (F0) — paginated archive + latest-by-type reads.
     # Routes land at /ai-reports/latest and /ai-reports/list under the new
     # `ai-reports` API GW service block (see api_gateway.tf). Query params
