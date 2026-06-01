@@ -9,49 +9,56 @@
 #
 # TODO: aws_cloudwatch_event_rule does NOT support schedule_timezone.
 # All schedule_timezone fields in local.scheduled_lambdas are ignored.
-# Other crons (notif-weekly-recap, notif-lineup-not-set, notif-close-game-*,
-# notif-worldcup-movement) currently fire at the UTC time in their cron
-# expression — left as-is for v1 since the user has been running with
-# this behavior. To fix properly, migrate to `aws_scheduler_schedule`
-# which natively supports timezone — or convert each cron expression
-# to its UTC equivalent like the F3 entry below.
+# As a workaround every cron_expression below is encoded directly in UTC
+# (pinned to EDT, so playoffs/offseason drift 1 hour earlier — acceptable
+# since all fire at reasonable hours). To fix properly, migrate to
+# `aws_scheduler_schedule` which natively supports timezone.
 ###############################################################################
 
 locals {
   scheduled_lambdas = [
     {
-      name              = "notif-weekly-recap"
-      handler_dir       = "notif_weekly_recap"
-      description       = "Tuesday morning: per-manager weekly matchup recap push."
-      cron_expression   = "cron(0 9 ? * TUE *)" # Tue 09:00 ET
+      name            = "notif-weekly-recap"
+      handler_dir     = "notif_weekly_recap"
+      description     = "Tuesday morning: per-manager weekly matchup recap push."
+      cron_expression = "cron(0 13 ? * TUE *)" # Tue 13:00 UTC = 9am EDT / 8am EST
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
     {
-      name              = "notif-lineup-not-set"
-      handler_dir       = "notif_lineup_not_set"
-      description       = "Sunday morning reminder: starters on bye / OUT."
-      cron_expression   = "cron(0 11 ? * SUN *)" # Sun 11:00 ET
+      name            = "notif-lineup-not-set"
+      handler_dir     = "notif_lineup_not_set"
+      description     = "Sunday morning reminder: starters on bye / OUT."
+      cron_expression = "cron(0 15 ? * SUN *)" # Sun 15:00 UTC = 11am EDT / 10am EST
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
     {
-      name              = "notif-close-game-sun"
-      handler_dir       = "notif_close_game_alert"
-      description       = "Sunday primetime close-game alert (within 10 pts)."
-      cron_expression   = "cron(0 20 ? * SUN *)" # Sun 20:00 ET
+      name        = "notif-close-game-sun"
+      handler_dir = "notif_close_game_alert"
+      description = "Sunday primetime close-game alert (within 10 pts)."
+      # Sun 8pm EDT = 00:00 UTC the NEXT day, so day-of-week shifts SUN -> MON.
+      # During EST window this fires at 7pm ET on Sunday instead of 8pm.
+      cron_expression = "cron(0 0 ? * MON *)" # Mon 00:00 UTC = Sun 8pm EDT / 7pm EST
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
     {
-      name              = "notif-close-game-mon"
-      handler_dir       = "notif_close_game_alert"
-      description       = "Monday primetime close-game alert (within 10 pts)."
-      cron_expression   = "cron(0 20 ? * MON *)" # Mon 20:00 ET
+      name        = "notif-close-game-mon"
+      handler_dir = "notif_close_game_alert"
+      description = "Monday primetime close-game alert (within 10 pts)."
+      # Mon 8pm EDT = 00:00 UTC the NEXT day, so day-of-week shifts MON -> TUE.
+      # During EST window this fires at 7pm ET on Monday instead of 8pm.
+      cron_expression = "cron(0 0 ? * TUE *)" # Tue 00:00 UTC = Mon 8pm EDT / 7pm EST
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
     {
-      name              = "notif-worldcup-movement"
-      handler_dir       = "notif_worldcup_movement"
-      description       = "Tuesday: World Cup clinch/elimination/line-flip transitions."
-      cron_expression   = "cron(0 10 ? * TUE *)" # Tue 10:00 ET, after recap
+      name            = "notif-worldcup-movement"
+      handler_dir     = "notif_worldcup_movement"
+      description     = "Tuesday: World Cup clinch/elimination/line-flip transitions."
+      cron_expression = "cron(0 14 ? * TUE *)" # Tue 14:00 UTC = 10am EDT / 9am EST, after recap
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
     # AI Review (F3) — weekly recap cron.
@@ -71,10 +78,11 @@ locals {
     # IAM coverage: existing wildcards in iam_lambdas.tf cover the new
     # function name + Dynamo R/W on xomper-ai-memories / xomper-ai-reports.
     {
-      name              = "notif-ai-review-weekly"
-      handler_dir       = "notif_ai_review_weekly"
-      description       = "Tuesday afternoon: AI-generated weekly league newsletter (Claude Haiku)"
-      cron_expression   = "cron(0 18 ? * TUE *)" # Tue 18:00 UTC = 2pm EDT / 1pm EST
+      name            = "notif-ai-review-weekly"
+      handler_dir     = "notif_ai_review_weekly"
+      description     = "Tuesday afternoon: AI-generated weekly league newsletter (Claude Haiku)"
+      cron_expression = "cron(0 18 ? * TUE *)" # Tue 18:00 UTC = 2pm EDT / 1pm EST
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
   ]
