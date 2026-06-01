@@ -61,7 +61,15 @@ module "api" {
   # there is a custom domain base path mapping that depends on this stage name.
   stage_name            = "dev"
   authorizer_invoke_arn = aws_lambda_function.authorizer.invoke_arn
-  authorizer_role_arn   = aws_iam_role.authorizer_role.arn
+  # Pass empty so the module skips authorizerCredentials. With it
+  # unset, API GW invokes the authorizer via the Lambda's
+  # resource-based policy (module.api.aws_lambda_permission.authorizer)
+  # instead of trying to assume this role. The role we previously
+  # passed here (xomper-authorizer-exec) is the authorizer Lambda's
+  # *execution* role — it trusts lambda.amazonaws.com only and has no
+  # InvokeFunction permission, which caused AuthorizerConfigurationException
+  # on every authorized request after the 2026-06-01 deployment replacement.
+  authorizer_role_arn   = ""
   tags                  = local.standard_tags
   allow_headers         = local.api_allow_headers
   allow_origin          = "https://${local.domain_name}"
