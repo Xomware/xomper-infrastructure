@@ -178,6 +178,34 @@ locals {
     #   lambdas/api_ai_reports_list/    → xomper-api-ai-reports-list
     { name = "ai-reports-latest", description = "AI Review: latest report by type (query ?type=postDraft|preseason|weekly)", path_part = "latest", http_method = "GET" },
     { name = "ai-reports-list", description = "AI Review: paginated archive (query ?type=&limit=&cursor=)", path_part = "list", http_method = "GET" },
+
+    # Announcements — admin-editable league announcements replacing the
+    # hardcoded LeagueAnnouncements.current array shipped in Season Refocus F2.
+    # One public read (JWT-gated, not admin-gated) plus four admin-gated
+    # CRUD routes. Backed by a new `league_announcements` Supabase table
+    # (created out-of-band via the Supabase dashboard — no Terraform changes
+    # for the table itself). Public read lands at /announcements/list under
+    # the new `announcements` API GW service block (see api_gateway.tf),
+    # mirroring the F0 ai-reports two-segment flatten for the same
+    # api-gateway-service v2.2.0 constraint (path_prefix + path_part only).
+    # The four admin routes flatten under the existing `admin` service block
+    # per the F1/F3/F4 admin-flatten pattern (email-test, reports-flag,
+    # users-update, ...). Same JWT + admin gate as other /admin/* routes
+    # (shared authorizer + handler-level require_admin). Write handlers
+    # append an `admin_audit` row. Backend dirs:
+    #   lambdas/api_announcements/                    → xomper-api-announcements
+    #   lambdas/api_admin_announcements_list/         → xomper-api-admin-announcements-list
+    #   lambdas/api_admin_announcements_create/       → xomper-api-admin-announcements-create
+    #   lambdas/api_admin_announcements_update/       → xomper-api-admin-announcements-update
+    #   lambdas/api_admin_announcements_delete/       → xomper-api-admin-announcements-delete
+    # IAM coverage: existing wildcards on xomper-lambda-exec (Dynamo R/W,
+    # SSM read, SES, Supabase via env) already cover the new lambdas — no
+    # IAM changes needed.
+    { name = "announcements", description = "Announcements: list active league announcements (public read, JWT-gated)", path_part = "list", http_method = "GET" },
+    { name = "admin-announcements-list", description = "Admin: list all league_announcements rows (full rows incl. inactive/expired for the editor)", path_part = "announcements-list", http_method = "GET" },
+    { name = "admin-announcements-create", description = "Admin: create a league_announcements row (body: title, body, priority, expires_at?, is_active?, display_order?)", path_part = "announcements-create", http_method = "POST" },
+    { name = "admin-announcements-update", description = "Admin: patch an allowlisted-field subset of a league_announcements row (body: id, fields)", path_part = "announcements-update", http_method = "POST" },
+    { name = "admin-announcements-delete", description = "Admin: soft-delete a league_announcements row by id (sets is_active=false; body: id)", path_part = "announcements-delete", http_method = "POST" },
   ]
 }
 

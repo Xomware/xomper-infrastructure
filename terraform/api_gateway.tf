@@ -39,6 +39,18 @@ locals {
       invoke_arn  = aws_lambda_function.api[l.name].invoke_arn
     } if startswith(l.name, "ai-reports-")
   ]
+
+  # Public-read announcements endpoint(s). Filtered by exact name == "announcements"
+  # so we do NOT accidentally include the four admin-announcements-* lambdas
+  # (those live under the /admin/* service block above).
+  announcements_endpoints = [
+    for l in local.api_lambdas : {
+      name        = l.name
+      path_part   = l.path_part
+      http_method = l.http_method
+      invoke_arn  = aws_lambda_function.api[l.name].invoke_arn
+    } if l.name == "announcements"
+  ]
 }
 
 module "api" {
@@ -73,6 +85,10 @@ module "api" {
     ai_reports = {
       path_prefix = "ai-reports"
       endpoints   = local.ai_reports_endpoints
+    }
+    announcements = {
+      path_prefix = "announcements"
+      endpoints   = local.announcements_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
