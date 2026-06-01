@@ -7,8 +7,14 @@
 # Supabase + Sleeper, and emits push (and optionally email) via the
 # existing send_push_to_users / send_emails_concurrently infra.
 #
-# Schedules use the America/New_York timezone (EventBridge supports
-# this since 2023, no manual DST handling required).
+# TODO: aws_cloudwatch_event_rule does NOT support schedule_timezone.
+# All schedule_timezone fields in local.scheduled_lambdas are ignored.
+# Other crons (notif-weekly-recap, notif-lineup-not-set, notif-close-game-*,
+# notif-worldcup-movement) currently fire at the UTC time in their cron
+# expression — left as-is for v1 since the user has been running with
+# this behavior. To fix properly, migrate to `aws_scheduler_schedule`
+# which natively supports timezone — or convert each cron expression
+# to its UTC equivalent like the F3 entry below.
 ###############################################################################
 
 locals {
@@ -49,19 +55,26 @@ locals {
       schedule_timezone = "America/New_York"
     },
     # AI Review (F3) — weekly recap cron.
-    # Fires Tue 14:00 ET — far enough past Monday Night Football (~23:30 ET
-    # Mon) for Sleeper's nfl_state.week to have incremented, and 5h past
-    # `notif-weekly-recap` (09:00 ET) so the two products land separately
-    # in inboxes. ET is interpreted directly by EventBridge via
-    # schedule_timezone, so no DST math needed (same convention as the
-    # other five entries above).
+    # Fires Tue 18:00 UTC, which lands post-MNF (~23:30 ET Mon) so Sleeper's
+    # nfl_state.week has incremented, and several hours past `notif-weekly-recap`
+    # so the two products land separately in inboxes.
+    #
+    # Cron expression is in UTC because aws_cloudwatch_event_rule does NOT
+    # support schedule_timezone (see the TODO at the top of this file — the
+    # schedule_timezone attribute below is silently ignored by AWS). To get
+    # ET-aware behavior without migrating resources we encode the UTC time
+    # directly, which means DST drift is acceptable for this cron:
+    #   - 18:00 UTC = 14:00 EDT during EDT window (Mar–Nov, regular season)
+    #   - 18:00 UTC = 13:00 EST during EST window (Nov–Mar, playoffs)
+    # Both windows are post-lunch Tuesday — fine for a weekly newsletter.
+    #
     # IAM coverage: existing wildcards in iam_lambdas.tf cover the new
     # function name + Dynamo R/W on xomper-ai-memories / xomper-ai-reports.
     {
       name              = "notif-ai-review-weekly"
       handler_dir       = "notif_ai_review_weekly"
       description       = "Tuesday afternoon: AI-generated weekly league newsletter (Claude Haiku)"
-      cron_expression   = "cron(0 14 ? * TUE *)" # Tue 14:00 ET, post-MNF
+      cron_expression   = "cron(0 18 ? * TUE *)" # Tue 18:00 UTC = 2pm EDT / 1pm EST
       schedule_timezone = "America/New_York"
     },
   ]
