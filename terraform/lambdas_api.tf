@@ -136,6 +136,23 @@ locals {
     { name = "admin-leagues-list", description = "Admin: list whitelisted_leagues (full rows for the Tables editor)", path_part = "leagues-list", http_method = "GET" },
     { name = "admin-audit-list", description = "Admin: paginated audit feed from admin_audit (query ?limit=&cursor=&action=&actor_user_id=)", path_part = "audit-list", http_method = "GET" },
 
+    # Admin Cron Settings — per-lambda Enabled kill switch + Test Mode flag for
+    # the five scheduled notif lambdas (notif_weekly_recap, notif_lineup_not_set,
+    # notif_close_game_alert, notif_worldcup_movement, notif_ai_review_weekly).
+    # Backed by a new `admin_cron_settings` Supabase table (created out-of-band
+    # via the Supabase dashboard — no Terraform changes for the table itself).
+    # Routes flattened under the existing `admin` service block per the same
+    # api-gateway-service v2.2.0 constraint as F1/F3/F4 above. Same JWT + admin
+    # gate as other /admin/* routes (shared authorizer + handler-level
+    # require_admin). Update writes an `admin_audit` row. Backend dirs:
+    #   lambdas/api_admin_cron_settings_list/    → xomper-api-admin-cron-settings-list
+    #   lambdas/api_admin_cron_settings_update/  → xomper-api-admin-cron-settings-update
+    # IAM coverage: existing wildcards on xomper-lambda-exec (Dynamo R/W, SSM
+    # read, SES, Supabase via env) already cover the new lambdas — no IAM
+    # changes needed.
+    { name = "admin-cron-settings-list", description = "Admin: list all admin_cron_settings rows (enabled + test_mode per cron)", path_part = "cron-settings-list", http_method = "GET" },
+    { name = "admin-cron-settings-update", description = "Admin: patch enabled / test_mode on a single admin_cron_settings row (body: cron_key, enabled?, test_mode?)", path_part = "cron-settings-update", http_method = "POST" },
+
     # Admin Portal (F5) — CloudWatch Log Viewer. Reads a tail of admin-relevant
     # lambda log groups via `logs:FilterLogEvents` and returns paginated events
     # with server-side PII redaction (email / Sleeper user id / Anthropic key).
