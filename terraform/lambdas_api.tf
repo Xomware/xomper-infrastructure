@@ -133,6 +133,7 @@ locals {
     # changes needed.
     { name = "admin-users-update", description = "Admin: update an allowlisted-field subset of a whitelisted_users row (body: user_id, fields)", path_part = "users-update", http_method = "POST" },
     { name = "admin-leagues-update", description = "Admin: update an allowlisted-field subset of a whitelisted_leagues row (body: league_id, fields)", path_part = "leagues-update", http_method = "POST" },
+    { name = "admin-users-list", description = "Admin: list whitelisted_users (full rows incl. inactive for the Tables editor)", path_part = "users-list", http_method = "GET" },
     { name = "admin-leagues-list", description = "Admin: list whitelisted_leagues (full rows for the Tables editor)", path_part = "leagues-list", http_method = "GET" },
     { name = "admin-audit-list", description = "Admin: paginated audit feed from admin_audit (query ?limit=&cursor=&action=&actor_user_id=)", path_part = "audit-list", http_method = "GET" },
 
