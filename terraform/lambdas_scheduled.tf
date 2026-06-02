@@ -80,8 +80,27 @@ locals {
     {
       name            = "notif-ai-review-weekly"
       handler_dir     = "notif_ai_review_weekly"
-      description     = "Tuesday afternoon: AI-generated weekly league newsletter (Claude Haiku)"
-      cron_expression = "cron(0 18 ? * TUE *)" # Tue 18:00 UTC = 2pm EDT / 1pm EST
+      description     = "Wednesday afternoon: AI-generated weekly league recap (Claude Haiku)"
+      # Moved from Tue 18:00 -> Wed 18:00 UTC so the Wed-morning Week
+      # Preview (9am ET) gets the morning slot and the AI recap follows
+      # later that afternoon — keeps Tuesday from being inbox-spammed
+      # (Tue already has data recap 9am + WC push 10am).
+      cron_expression = "cron(0 18 ? * WED *)" # Wed 18:00 UTC = 2pm EDT / 1pm EST
+      # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
+      schedule_timezone = "America/New_York"
+    },
+
+    # Week Preview (Phase 2). Wednesday-morning forward-looking
+    # newsletter — AI body + standings + WC tables. Same env block,
+    # same IAM coverage (SES, Dynamo, SSM, Anthropic via env). Fires
+    # before waiver claims process so the preview is actionable.
+    # Cron-settings + admin trigger let admin gate broadcast and
+    # manually re-fire. Backend dir: lambdas/notif_week_preview/ .
+    {
+      name            = "notif-week-preview"
+      handler_dir     = "notif_week_preview"
+      description     = "Wednesday morning: Week N preview newsletter (Claude Haiku)"
+      cron_expression = "cron(0 14 ? * WED *)" # Wed 14:00 UTC = 9am ET
       # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
