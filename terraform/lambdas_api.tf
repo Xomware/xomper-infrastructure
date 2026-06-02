@@ -99,6 +99,7 @@ locals {
     # read, SES, Supabase via env) already cover both lambdas — no IAM changes.
     { name = "admin-email-test", description = "Admin: send a single AI Review report to one whitelisted user", path_part = "email-test", http_method = "POST" },
     { name = "admin-email-test-recipients", description = "Admin: list whitelisted users for the test-email picker", path_part = "email-test-recipients", http_method = "GET" },
+    { name = "admin-email-test-template", description = "Admin: send a sample non-AI-Review email template (weekly_recap, lineup_not_set, rule_*, taxi_*) to one whitelisted user", path_part = "email-test-template", http_method = "POST" },
 
     # Admin Portal (F3) — toggle is_redacted / do_not_broadcast metadata flags on
     # an AI report row. The api-gateway-service v2.2.0 module supports only
