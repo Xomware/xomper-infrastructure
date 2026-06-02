@@ -6,14 +6,7 @@ resource "aws_lambda_function" "authorizer" {
   source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
   handler          = "handler.handler"
   layers           = [aws_lambda_layer_version.lambda_layer.arn]
-  # Pinned to python3.10 because the shared layer
-  # (xomper-shared-packages) is compiled with cp310 extensions
-  # (notably _cffi_backend.cpython-310-x86_64-linux-gnu.so used
-  # transitively by cryptography). The authorizer is the only
-  # lambda that imports cryptography (via PyJWT's ES256 path for
-  # Supabase JWT verification); all other lambdas work fine on
-  # var.lambda_runtime (3.13) because they don't touch cryptography.
-  runtime          = "python3.10"
+  runtime          = var.lambda_runtime
   memory_size      = var.authorizer_memory_size
   timeout          = var.authorizer_timeout
   role             = aws_iam_role.authorizer_role.arn
