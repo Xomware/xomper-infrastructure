@@ -88,6 +88,15 @@ locals {
     # lambda + xomper-ai-memories R/W — no IAM changes needed.
     { name = "admin-ai-review-weekly-trigger", description = "AI Review: weekly recap admin trigger (cron retries + dry-run calibration)", path_part = "ai-review-weekly-trigger", http_method = "POST" },
 
+    # Week Preview (Phase 2) — admin-triggered Wednesday newsletter.
+    # Same wiring + auth model as the weekly trigger above. Backend dir:
+    #   lambdas/api_admin_ai_review_week_preview_trigger/
+    #     → xomper-api-admin-ai-review-week-preview-trigger
+    # IAM coverage: existing wildcards on xomper-lambda-exec already
+    # cover the new lambda (SES, SSM, Anthropic via env, Dynamo on
+    # xomper-ai-reports + xomper-ai-memories) — no IAM changes needed.
+    { name = "admin-ai-review-week-preview-trigger", description = "AI Review: week-preview admin trigger (dry-run + force + week override)", path_part = "ai-review-week-preview-trigger", http_method = "POST" },
+
     # Admin Portal (F1) — test email sender + recipients picker.
     # Lets an admin re-send any of the latest AI Review reports to a single
     # whitelisted user without polluting broadcast state. Same JWT + admin gate
