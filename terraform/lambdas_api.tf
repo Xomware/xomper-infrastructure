@@ -97,6 +97,23 @@ locals {
     # xomper-ai-reports + xomper-ai-memories) — no IAM changes needed.
     { name = "admin-ai-review-week-preview-trigger", description = "AI Review: week-preview admin trigger (dry-run + force + week override)", path_part = "ai-review-week-preview-trigger", http_method = "POST" },
 
+    # Email Archive (Phase 3) — admin view + resend over the
+    # Supabase email_archive table that ses_helper writes on every
+    # successful SES send. Three routes: paginated list (no bodies),
+    # single-row detail (with html/text bodies), and resend (loads
+    # a row + re-fires it to a typed-in recipient). Same admin gate
+    # + JWT authorizer as every other admin route. Backend dirs:
+    #   lambdas/api_admin_emails_list/    → xomper-api-admin-emails-list
+    #   lambdas/api_admin_emails_detail/  → xomper-api-admin-emails-detail
+    #   lambdas/api_admin_emails_resend/  → xomper-api-admin-emails-resend
+    # IAM coverage: existing wildcards on xomper-lambda-exec already
+    # cover SES + Supabase via env — no IAM changes needed. The
+    # email_archive Supabase table is created out-of-band via SQL
+    # migration (see docs/migrations/2026-06-03-email-archive.sql).
+    { name = "admin-emails-list",   description = "Admin: paginated list of archived emails (newest first; optional recipient + template filter)", path_part = "emails-list",   http_method = "GET" },
+    { name = "admin-emails-detail", description = "Admin: full row (html + text bodies) for one email_archive id",                                  path_part = "emails-detail", http_method = "GET" },
+    { name = "admin-emails-resend", description = "Admin: resend an archived email to a typed-in recipient",                                        path_part = "emails-resend", http_method = "POST" },
+
     # Admin Portal (F1) — test email sender + recipients picker.
     # Lets an admin re-send any of the latest AI Review reports to a single
     # whitelisted user without polluting broadcast state. Same JWT + admin gate
