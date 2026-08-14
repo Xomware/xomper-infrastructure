@@ -110,9 +110,9 @@ locals {
     # cover SES + Supabase via env — no IAM changes needed. The
     # email_archive Supabase table is created out-of-band via SQL
     # migration (see docs/migrations/2026-06-03-email-archive.sql).
-    { name = "admin-emails-list",   description = "Admin: paginated list of archived emails (newest first; optional recipient + template filter)", path_part = "emails-list",   http_method = "GET" },
-    { name = "admin-emails-detail", description = "Admin: full row (html + text bodies) for one email_archive id",                                  path_part = "emails-detail", http_method = "GET" },
-    { name = "admin-emails-resend", description = "Admin: resend an archived email to a typed-in recipient",                                        path_part = "emails-resend", http_method = "POST" },
+    { name = "admin-emails-list", description = "Admin: paginated list of archived emails (newest first; optional recipient + template filter)", path_part = "emails-list", http_method = "GET" },
+    { name = "admin-emails-detail", description = "Admin: full row (html + text bodies) for one email_archive id", path_part = "emails-detail", http_method = "GET" },
+    { name = "admin-emails-resend", description = "Admin: resend an archived email to a typed-in recipient", path_part = "emails-resend", http_method = "POST" },
 
     # Admin Portal (F1) — test email sender + recipients picker.
     # Lets an admin re-send any of the latest AI Review reports to a single
