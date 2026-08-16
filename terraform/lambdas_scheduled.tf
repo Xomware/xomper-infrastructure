@@ -78,9 +78,9 @@ locals {
     # IAM coverage: existing wildcards in iam_lambdas.tf cover the new
     # function name + Dynamo R/W on xomper-ai-memories / xomper-ai-reports.
     {
-      name            = "notif-ai-review-weekly"
-      handler_dir     = "notif_ai_review_weekly"
-      description     = "Wednesday afternoon: AI-generated weekly league recap (Claude Haiku)"
+      name        = "notif-ai-review-weekly"
+      handler_dir = "notif_ai_review_weekly"
+      description = "Wednesday afternoon: AI-generated weekly league recap (Claude Haiku)"
       # Moved from Tue 18:00 -> Wed 18:00 UTC so the Wed-morning Week
       # Preview (9am ET) gets the morning slot and the AI recap follows
       # later that afternoon — keeps Tuesday from being inbox-spammed

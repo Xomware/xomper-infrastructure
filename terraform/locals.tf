@@ -20,7 +20,7 @@ locals {
     SNS_PLATFORM_APP_ARN = aws_sns_platform_application.apns.arn
     DEVICE_TOKENS_TABLE  = aws_dynamodb_table.device_tokens.name
     # Authorizer needs this to fetch Supabase's JWKS for ES256 verification.
-    SUPABASE_URL         = var.supabase_url
+    SUPABASE_URL = var.supabase_url
   }
 
   # API GW

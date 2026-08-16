@@ -9,9 +9,10 @@ locals {
 
 # --- Profiles ---
 resource "aws_dynamodb_table" "profiles" {
-  name         = "${var.app_name}-profiles"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-profiles"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "id"
 
   attribute {
     name = "id"
@@ -32,9 +33,10 @@ resource "aws_dynamodb_table" "profiles" {
 
 # --- Whitelisted Users ---
 resource "aws_dynamodb_table" "whitelisted_users" {
-  name         = "${var.app_name}-whitelisted-users"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "email"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-whitelisted-users"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "email"
 
   attribute {
     name = "email"
@@ -55,9 +57,10 @@ resource "aws_dynamodb_table" "whitelisted_users" {
 
 # --- Rule Proposals ---
 resource "aws_dynamodb_table" "rule_proposals" {
-  name         = "${var.app_name}-rule-proposals"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-rule-proposals"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "id"
 
   attribute {
     name = "id"
@@ -89,10 +92,11 @@ resource "aws_dynamodb_table" "rule_proposals" {
 
 # --- Rule Votes ---
 resource "aws_dynamodb_table" "rule_votes" {
-  name         = "${var.app_name}-rule-votes"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "proposal_id"
-  range_key    = "user_id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-rule-votes"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "proposal_id"
+  range_key                   = "user_id"
 
   attribute {
     name = "proposal_id"
@@ -118,10 +122,11 @@ resource "aws_dynamodb_table" "rule_votes" {
 
 # --- Taxi Steal Requests ---
 resource "aws_dynamodb_table" "taxi_steal_requests" {
-  name         = "${var.app_name}-taxi-steal-requests"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "league_id"
-  range_key    = "player_id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-taxi-steal-requests"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "league_id"
+  range_key                   = "player_id"
 
   attribute {
     name = "league_id"
@@ -147,10 +152,11 @@ resource "aws_dynamodb_table" "taxi_steal_requests" {
 
 # --- Draft History ---
 resource "aws_dynamodb_table" "draft_history" {
-  name         = "${var.app_name}-draft-history"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "draft_id"
-  range_key    = "pick_no"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-draft-history"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "draft_id"
+  range_key                   = "pick_no"
 
   attribute {
     name = "draft_id"
@@ -176,10 +182,11 @@ resource "aws_dynamodb_table" "draft_history" {
 
 # --- Matchup History ---
 resource "aws_dynamodb_table" "matchup_history" {
-  name         = "${var.app_name}-matchup-history"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "league_id_season_week"
-  range_key    = "matchup_id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-matchup-history"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "league_id_season_week"
+  range_key                   = "matchup_id"
 
   attribute {
     name = "league_id_season_week"
@@ -205,10 +212,11 @@ resource "aws_dynamodb_table" "matchup_history" {
 
 # --- Season Standings ---
 resource "aws_dynamodb_table" "season_standings" {
-  name         = "${var.app_name}-season-standings"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "league_id"
-  range_key    = "season"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-season-standings"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "league_id"
+  range_key                   = "season"
 
   attribute {
     name = "league_id"
@@ -234,10 +242,11 @@ resource "aws_dynamodb_table" "season_standings" {
 
 # --- League Champions ---
 resource "aws_dynamodb_table" "league_champions" {
-  name         = "${var.app_name}-league-champions"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "league_id"
-  range_key    = "season"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-league-champions"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "league_id"
+  range_key                   = "season"
 
   attribute {
     name = "league_id"
@@ -269,10 +278,11 @@ resource "aws_dynamodb_table" "league_champions" {
 # inside the partition so reads with ScanIndexForward=false stream
 # newest-first.
 resource "aws_dynamodb_table" "notification_log" {
-  name         = "${var.app_name}-notification-log"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "day"
-  range_key    = "id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-notification-log"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "day"
+  range_key                   = "id"
 
   attribute {
     name = "day"
@@ -302,10 +312,11 @@ resource "aws_dynamodb_table" "notification_log" {
 # which managers get a transition push. PK = league_id#season,
 # SK = week, item value is the per-team status map.
 resource "aws_dynamodb_table" "worldcup_snapshots" {
-  name         = "${var.app_name}-worldcup-snapshots"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "league_id_season"
-  range_key    = "week"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-worldcup-snapshots"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "league_id_season"
+  range_key                   = "week"
 
   attribute {
     name = "league_id_season"
@@ -339,10 +350,11 @@ resource "aws_dynamodb_table" "worldcup_snapshots" {
 # lambda role only reads + writes via the existing `${var.app_name}*`
 # wildcard in `iam_lambdas.tf:DynamoDBRuntime`.
 resource "aws_dynamodb_table" "ai_reports" {
-  name         = "${var.app_name}-ai-reports"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "pk"
-  range_key    = "sk"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-ai-reports"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "pk"
+  range_key                   = "sk"
 
   attribute {
     name = "pk"
@@ -394,10 +406,11 @@ resource "aws_dynamodb_table" "ai_reports" {
 # IAM coverage: existing `${var.app_name}*` wildcard in iam_lambdas.tf:
 # DynamoDBRuntime covers R/W on this table.
 resource "aws_dynamodb_table" "ai_memories" {
-  name         = "${var.app_name}-ai-memories"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "pk"
-  range_key    = "sk"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-ai-memories"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "pk"
+  range_key                   = "sk"
 
   attribute {
     name = "pk"
@@ -423,10 +436,11 @@ resource "aws_dynamodb_table" "ai_memories" {
 
 # --- Device Tokens (Push Notifications) ---
 resource "aws_dynamodb_table" "device_tokens" {
-  name         = "${var.app_name}-device-tokens"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "user_id"
-  range_key    = "device_token"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-device-tokens"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "user_id"
+  range_key                   = "device_token"
 
   attribute {
     name = "user_id"
