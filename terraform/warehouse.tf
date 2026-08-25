@@ -237,6 +237,62 @@ resource "aws_lambda_permission" "warehouse_ingest_nightly" {
   source_arn    = aws_cloudwatch_event_rule.warehouse_ingest_nightly.arn
 }
 
+# --- on-demand values API ----------------------------------------------------
+#
+# Defined here rather than in local.api_lambdas because the generic API lambda
+# resource attaches only the shared layer and var.lambda_memory_size. This one
+# needs DuckDB and 1024 MB, and inheriting the generic shape would leave it
+# unable to import duckdb at all.
+#
+# The name matches what the backend deploy derives from its directory:
+# lambdas/api_values_compute -> xomper-api-values-compute.
+
+resource "aws_lambda_function" "values_compute" {
+  function_name    = "${var.app_name}-api-values-compute"
+  description      = "Compute a league's player values on demand from the warehouse."
+  filename         = "./templates/lambda_stub.zip"
+  source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
+  handler          = "handler.handler"
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.lambda_role.arn
+
+  layers = [
+    aws_lambda_layer_version.lambda_layer.arn,
+    aws_lambda_layer_version.duckdb.arn,
+  ]
+
+  memory_size = 1024
+  timeout     = 60
+
+  environment {
+    variables = merge(local.lambda_variables, {
+      WAREHOUSE_BUCKET = aws_s3_bucket.warehouse.id
+      PLAYERS_TABLE    = aws_dynamodb_table.players.name
+      STATS_TABLE      = aws_dynamodb_table.stats_current.name
+    })
+  }
+
+  tracing_config {
+    mode = var.lambda_trace_mode
+  }
+
+  tags = merge(local.standard_tags, {
+    "name"        = "${var.app_name}-api-values-compute"
+    "lambda_type" = "api"
+    "handler_dir" = "api_values_compute"
+  })
+
+  lifecycle {
+    ignore_changes = [description, filename, source_code_hash, layers]
+  }
+}
+
+resource "aws_cloudwatch_log_group" "values_compute" {
+  name              = "/aws/lambda/${aws_lambda_function.values_compute.function_name}"
+  retention_in_days = 14
+  tags              = local.standard_tags
+}
+
 # --- access ------------------------------------------------------------------
 #
 # Scoped to the warehouse bucket and its two tables rather than added to the

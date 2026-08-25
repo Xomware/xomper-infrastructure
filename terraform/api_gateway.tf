@@ -40,6 +40,18 @@ locals {
     } if startswith(l.name, "ai-reports-")
   ]
 
+  # On-demand league valuation. Its lambda lives in warehouse.tf because it
+  # needs the DuckDB layer and more memory than the generic API shape gives,
+  # so it is referenced directly rather than pulled from local.api_lambdas.
+  values_endpoints = [
+    {
+      name        = "values-compute"
+      path_part   = "compute"
+      http_method = "POST"
+      invoke_arn  = aws_lambda_function.values_compute.invoke_arn
+    }
+  ]
+
   # Public-read announcements endpoint(s). Filtered by exact name == "announcements"
   # so we do NOT accidentally include the four admin-announcements-* lambdas
   # (those live under the /admin/* service block above).
@@ -97,6 +109,10 @@ module "api" {
     announcements = {
       path_prefix = "announcements"
       endpoints   = local.announcements_endpoints
+    }
+    values = {
+      path_prefix = "values"
+      endpoints   = local.values_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
