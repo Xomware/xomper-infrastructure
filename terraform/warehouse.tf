@@ -250,9 +250,9 @@ resource "aws_iam_role_policy" "warehouse_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "WarehouseObjects"
-        Effect = "Allow"
-        Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+        Sid      = "WarehouseObjects"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
         Resource = ["${aws_s3_bucket.warehouse.arn}/*"]
       },
       {
