@@ -179,13 +179,17 @@ resource "aws_lambda_function" "warehouse_ingest" {
   memory_size = 1024
   timeout     = 300
 
+  # Merged with the shared set, not replacing it. lambdas/common/constants.py
+  # reads AWS_ACCOUNT_ID and DYNAMODB_KMS_ALIAS with os.environ[...] at import
+  # time, so a function missing them dies with a KeyError before the handler
+  # is ever entered -- which is exactly how the first invoke of this function
+  # failed.
   environment {
-    variables = {
-      APP_NAME         = var.app_name
+    variables = merge(local.lambda_variables, {
       WAREHOUSE_BUCKET = aws_s3_bucket.warehouse.id
       PLAYERS_TABLE    = aws_dynamodb_table.players.name
       STATS_TABLE      = aws_dynamodb_table.stats_current.name
-    }
+    })
   }
 
   tracing_config {
@@ -246,9 +250,9 @@ resource "aws_iam_role_policy" "warehouse_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "WarehouseObjects"
-        Effect = "Allow"
-        Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+        Sid      = "WarehouseObjects"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
         Resource = ["${aws_s3_bucket.warehouse.arn}/*"]
       },
       {
