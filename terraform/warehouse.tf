@@ -160,6 +160,24 @@ resource "aws_lambda_layer_version" "duckdb" {
   }
 }
 
+# The resource above only ever holds the stub zip -- real DuckDB content is
+# published out of band, exactly like the shared packages layer. So
+# `aws_lambda_layer_version.duckdb.arn` points at version 1, the stub, forever.
+#
+# Any NEW function wired to that resource gets the stub and dies on
+# `import duckdb`. That is precisely what happened to
+# xomper-api-values-compute on its first invoke:
+#
+#   Runtime.ImportModuleError: Unable to import module 'handler':
+#   No module named 'duckdb'
+#
+# This data source resolves whatever version was actually published last, so a
+# new function is wired correctly from the start rather than needing a manual
+# update-function-configuration after every apply.
+data "aws_lambda_layer_version" "duckdb_latest" {
+  layer_name = aws_lambda_layer_version.duckdb.layer_name
+}
+
 resource "aws_lambda_function" "warehouse_ingest" {
   function_name    = "${var.app_name}-warehouse-ingest"
   description      = "Nightly: read Sleeper projections in SQL, write Parquet to the warehouse."
@@ -171,7 +189,7 @@ resource "aws_lambda_function" "warehouse_ingest" {
 
   layers = [
     aws_lambda_layer_version.lambda_layer.arn,
-    aws_lambda_layer_version.duckdb.arn,
+    data.aws_lambda_layer_version.duckdb_latest.arn,
   ]
 
   # Spike peak RSS was 517 MB. 128 MB OOMs; 1024 MB also buys proportionally
@@ -258,7 +276,7 @@ resource "aws_lambda_function" "values_compute" {
 
   layers = [
     aws_lambda_layer_version.lambda_layer.arn,
-    aws_lambda_layer_version.duckdb.arn,
+    data.aws_lambda_layer_version.duckdb_latest.arn,
   ]
 
   memory_size = 1024
