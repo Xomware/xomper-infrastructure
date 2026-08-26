@@ -129,3 +129,56 @@ output "platform_users_table" {
 output "platform_follows_table" {
   value = aws_dynamodb_table.platform_follows.name
 }
+
+###############################################################################
+# /me — the current user's platform record
+#
+# Replaces the direct Supabase `profiles` read the frontend used to do. Three
+# routes share one Lambda: they read the same item, resolve identity the same
+# way, and return the same shape.
+#
+# Route paths are flat (`sleeper-link`, not `sleeper/link`) because
+# api-gateway-service keys one API Gateway resource per endpoint on
+# `path_part`, so two methods on one part collide at apply time.
+###############################################################################
+
+resource "aws_lambda_function" "users_me" {
+  function_name    = "${var.app_name}-api-users-me"
+  description      = "Current user's platform record: read, link Sleeper, unlink"
+  filename         = "./templates/lambda_stub.zip"
+  source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
+  handler          = "handler.handler"
+  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+  runtime          = var.lambda_runtime
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+  role             = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = local.lambda_variables
+  }
+
+  tracing_config {
+    mode = var.lambda_trace_mode
+  }
+
+  tags = merge(local.standard_tags, tomap({
+    "name"        = "${var.app_name}-api-users-me"
+    "lambda_type" = "api"
+  }))
+
+  # Code is deployed from the backend repo; Terraform owns the shape only.
+  lifecycle {
+    ignore_changes = [
+      description,
+      filename,
+      source_code_hash,
+      layers
+    ]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.lambda_role_policy,
+    aws_iam_role.lambda_role
+  ]
+}

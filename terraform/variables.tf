@@ -175,3 +175,20 @@ variable "owner" {
   type        = string
   default     = "domgiordano"
 }
+
+# COGNITO
+# The `xomware-users` pool and the `xomper-client` app client are owned by
+# xomware-infrastructure — this repo only consumes them. Defaults are set to
+# the live values because neither identifier is a secret: both ship in the
+# frontend bundle, and Cognito treats the app client as public (no secret).
+variable "cognito_user_pool_id" {
+  description = "Shared xomware-users Cognito pool id"
+  type        = string
+  default     = "us-east-1_ZrN8NaaIv"
+}
+
+variable "cognito_client_id" {
+  description = "xomper-client app client id on the shared pool"
+  type        = string
+  default     = "38e5sjavoa76ghbl5hpjsapc49"
+}
