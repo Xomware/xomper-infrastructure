@@ -311,6 +311,53 @@ resource "aws_cloudwatch_log_group" "values_compute" {
   tags              = local.standard_tags
 }
 
+# Player metadata endpoint. No DuckDB here -- it is a DynamoDB read, so it
+# takes the generic shape and the shared layer only.
+
+resource "aws_lambda_function" "players_list" {
+  function_name    = "${var.app_name}-api-players-list"
+  description      = "Return the slimmed player map from the warehouse."
+  filename         = "./templates/lambda_stub.zip"
+  source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
+  handler          = "handler.handler"
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.lambda_role.arn
+  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+
+  # ~4,300 small items scanned and serialised. Comfortable, but not the 128 MB
+  # default.
+  memory_size = 512
+  timeout     = 30
+
+  environment {
+    variables = merge(local.lambda_variables, {
+      WAREHOUSE_BUCKET = aws_s3_bucket.warehouse.id
+      PLAYERS_TABLE    = aws_dynamodb_table.players.name
+      STATS_TABLE      = aws_dynamodb_table.stats_current.name
+    })
+  }
+
+  tracing_config {
+    mode = var.lambda_trace_mode
+  }
+
+  tags = merge(local.standard_tags, {
+    "name"        = "${var.app_name}-api-players-list"
+    "lambda_type" = "api"
+    "handler_dir" = "api_players_list"
+  })
+
+  lifecycle {
+    ignore_changes = [description, filename, source_code_hash, layers]
+  }
+}
+
+resource "aws_cloudwatch_log_group" "players_list" {
+  name              = "/aws/lambda/${aws_lambda_function.players_list.function_name}"
+  retention_in_days = 14
+  tags              = local.standard_tags
+}
+
 # --- access ------------------------------------------------------------------
 #
 # Scoped to the warehouse bucket and its two tables rather than added to the

@@ -52,6 +52,16 @@ locals {
     }
   ]
 
+  # Player metadata, replacing a 14.6 MB per-session download from Sleeper.
+  players_endpoints = [
+    {
+      name        = "players-list"
+      path_part   = "list"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.players_list.invoke_arn
+    }
+  ]
+
   # Public-read announcements endpoint(s). Filtered by exact name == "announcements"
   # so we do NOT accidentally include the four admin-announcements-* lambdas
   # (those live under the /admin/* service block above).
@@ -113,6 +123,10 @@ module "api" {
     values = {
       path_prefix = "values"
       endpoints   = local.values_endpoints
+    }
+    players = {
+      path_prefix = "players"
+      endpoints   = local.players_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
