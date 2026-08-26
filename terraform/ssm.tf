@@ -112,3 +112,30 @@ resource "aws_ssm_parameter" "anthropic_api_key" {
     ignore_changes = [tags, tags_all]
   }
 }
+
+# COGNITO
+# Neither identifier is a secret -- both ship in the frontend bundle, and the
+# app client is public (no client secret). They live here so a pool or client
+# change is a parameter update, not an application-code change, matching how
+# xomware-frontend and xomforms-frontend inject theirs at deploy time.
+resource "aws_ssm_parameter" "cognito_user_pool_id" {
+  name        = "/${var.app_name}/api/COGNITO_USER_POOL_ID"
+  description = "Shared xomware-users Cognito pool id"
+  type        = "String"
+  value       = var.cognito_user_pool_id
+
+  lifecycle {
+    ignore_changes = [tags, tags_all]
+  }
+}
+
+resource "aws_ssm_parameter" "cognito_client_id" {
+  name        = "/${var.app_name}/api/COGNITO_CLIENT_ID"
+  description = "xomper-client app client id on the shared pool"
+  type        = "String"
+  value       = var.cognito_client_id
+
+  lifecycle {
+    ignore_changes = [tags, tags_all]
+  }
+}
