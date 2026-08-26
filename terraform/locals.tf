@@ -21,6 +21,14 @@ locals {
     DEVICE_TOKENS_TABLE  = aws_dynamodb_table.device_tokens.name
     # Authorizer needs this to fetch Supabase's JWKS for ES256 verification.
     SUPABASE_URL = var.supabase_url
+
+    # The authorizer accepts Cognito (RS256) alongside Supabase while the
+    # platform migrates. The pool is shared estate-wide, so the client id is
+    # what scopes a token to Xomper — see lambdas/authorizer/handler.py.
+    COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+    COGNITO_CLIENT_ID    = var.cognito_client_id
+
+    PLATFORM_USERS_TABLE = aws_dynamodb_table.platform_users.name
   }
 
   # API GW

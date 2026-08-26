@@ -62,6 +62,30 @@ locals {
     }
   ]
 
+  # The current user's own record. One Lambda behind all three, so the
+  # invoke_arn repeats — the module keys its resources on the endpoint name,
+  # not the function.
+  me_endpoints = [
+    {
+      name        = "users-me-profile"
+      path_part   = "profile"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.users_me.invoke_arn
+    },
+    {
+      name        = "users-me-sleeper-link"
+      path_part   = "sleeper-link"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.users_me.invoke_arn
+    },
+    {
+      name        = "users-me-sleeper-unlink"
+      path_part   = "sleeper-unlink"
+      http_method = "DELETE"
+      invoke_arn  = aws_lambda_function.users_me.invoke_arn
+    }
+  ]
+
   # Public-read announcements endpoint(s). Filtered by exact name == "announcements"
   # so we do NOT accidentally include the four admin-announcements-* lambdas
   # (those live under the /admin/* service block above).
@@ -127,6 +151,10 @@ module "api" {
     players = {
       path_prefix = "players"
       endpoints   = local.players_endpoints
+    }
+    me = {
+      path_prefix = "me"
+      endpoints   = local.me_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
