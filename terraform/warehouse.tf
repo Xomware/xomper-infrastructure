@@ -188,7 +188,7 @@ resource "aws_lambda_function" "warehouse_ingest" {
   role             = aws_iam_role.lambda_role.arn
 
   layers = [
-    aws_lambda_layer_version.lambda_layer.arn,
+    data.aws_lambda_layer_version.shared_latest.arn,
     data.aws_lambda_layer_version.duckdb_latest.arn,
   ]
 
@@ -275,7 +275,7 @@ resource "aws_lambda_function" "values_compute" {
   role             = aws_iam_role.lambda_role.arn
 
   layers = [
-    aws_lambda_layer_version.lambda_layer.arn,
+    data.aws_lambda_layer_version.shared_latest.arn,
     data.aws_lambda_layer_version.duckdb_latest.arn,
   ]
 
@@ -322,7 +322,7 @@ resource "aws_lambda_function" "players_list" {
   handler          = "handler.handler"
   runtime          = var.lambda_runtime
   role             = aws_iam_role.lambda_role.arn
-  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+  layers           = [data.aws_lambda_layer_version.shared_latest.arn]
 
   # ~4,300 small items scanned and serialised. Comfortable, but not the 128 MB
   # default.
