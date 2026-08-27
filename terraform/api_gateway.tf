@@ -83,6 +83,24 @@ locals {
       path_part   = "sleeper-unlink"
       http_method = "DELETE"
       invoke_arn  = aws_lambda_function.users_me.invoke_arn
+    },
+    {
+      name        = "users-me-leagues"
+      path_part   = "leagues"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.users_leagues.invoke_arn
+    },
+    {
+      name        = "users-me-follow"
+      path_part   = "follow"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.users_leagues.invoke_arn
+    },
+    {
+      name        = "users-me-unfollow"
+      path_part   = "unfollow"
+      http_method = "DELETE"
+      invoke_arn  = aws_lambda_function.users_leagues.invoke_arn
     }
   ]
 

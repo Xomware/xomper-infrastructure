@@ -182,3 +182,52 @@ resource "aws_lambda_function" "users_me" {
     aws_iam_role.lambda_role
   ]
 }
+
+###############################################################################
+# /me/leagues — which leagues the caller is in, and which they follow
+#
+# The league list itself comes from Sleeper live; only the follow set is
+# stored. Three routes share one Lambda for the same reason /me/profile does:
+# one table, one identity read, one response shape.
+###############################################################################
+
+resource "aws_lambda_function" "users_leagues" {
+  function_name    = "${var.app_name}-api-users-leagues"
+  description      = "The caller's leagues, with follow state"
+  filename         = "./templates/lambda_stub.zip"
+  source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
+  handler          = "handler.handler"
+  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+  runtime          = var.lambda_runtime
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+  role             = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = local.lambda_variables
+  }
+
+  tracing_config {
+    mode = var.lambda_trace_mode
+  }
+
+  tags = merge(local.standard_tags, tomap({
+    "name"        = "${var.app_name}-api-users-leagues"
+    "lambda_type" = "api"
+  }))
+
+  # Code is deployed from the backend repo; Terraform owns the shape only.
+  lifecycle {
+    ignore_changes = [
+      description,
+      filename,
+      source_code_hash,
+      layers
+    ]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.lambda_role_policy,
+    aws_iam_role.lambda_role
+  ]
+}
