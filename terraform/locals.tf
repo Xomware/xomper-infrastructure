@@ -28,7 +28,8 @@ locals {
     COGNITO_USER_POOL_ID = var.cognito_user_pool_id
     COGNITO_CLIENT_ID    = var.cognito_client_id
 
-    PLATFORM_USERS_TABLE = aws_dynamodb_table.platform_users.name
+    PLATFORM_USERS_TABLE   = aws_dynamodb_table.platform_users.name
+    PLATFORM_FOLLOWS_TABLE = aws_dynamodb_table.platform_follows.name
   }
 
   # API GW
