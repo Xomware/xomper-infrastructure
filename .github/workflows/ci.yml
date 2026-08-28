@@ -25,13 +25,9 @@ jobs:
       - name: Terraform fmt
         run: terraform fmt -check -recursive
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
+      # No credentials step: `init -backend=false` skips the S3 backend and
+      # `validate` never calls AWS. This job was handing the account's admin
+      # key to every pull request, including forks, to run two offline commands.
       - name: Terraform Init
         run: terraform init -backend=false
 
