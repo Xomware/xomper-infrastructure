@@ -30,6 +30,13 @@ resource "aws_lambda_layer_version" "lambda_layer" {
 # This data source resolves whatever was actually published last. Existing
 # functions carry ignore_changes = [layers], so this only affects newly created
 # ones -- it will not churn the fleet.
+#
+# Every aws_lambda_function that runs backend code must reference THIS, not
+# the stub resource above. Referencing the stub means a newly created function
+# is born on the stub's version and answers every request with
+# `Runtime.ImportModuleError: No module named 'lambdas'` until a layer-update
+# job happens to run. That is how xomper-api-profiles-get got stuck on 26, and
+# it caught xomper-api-admin-sleeper-claims the same way.
 data "aws_lambda_layer_version" "shared_latest" {
   layer_name = aws_lambda_layer_version.lambda_layer.layer_name
 }
