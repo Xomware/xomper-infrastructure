@@ -5,7 +5,7 @@ resource "aws_lambda_function" "authorizer" {
   filename         = "./templates/lambda_stub.zip"
   source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
   handler          = "handler.handler"
-  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+  layers           = [data.aws_lambda_layer_version.shared_latest.arn]
   runtime          = var.lambda_runtime
   memory_size      = var.authorizer_memory_size
   timeout          = var.authorizer_timeout
