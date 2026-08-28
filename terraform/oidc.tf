@@ -101,11 +101,17 @@ data "aws_iam_policy_document" "github_actions_frontend" {
     ]
   }
 
-  # Those parameters are SecureString, so reading them is a KMS decrypt too.
+  # Decrypt covers the SecureString parameters; GenerateDataKey and Encrypt
+  # cover writing to the site bucket, which is KMS-encrypted -- s3:PutObject
+  # alone fails there with an AccessDenied on kms:GenerateDataKey.
   statement {
-    sid       = "DecryptBuildConfig"
-    effect    = "Allow"
-    actions   = ["kms:Decrypt"]
+    sid    = "UseWebAppKey"
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt",
+      "kms:GenerateDataKey",
+    ]
     resources = [aws_kms_alias.web_app.target_key_arn]
   }
 }
