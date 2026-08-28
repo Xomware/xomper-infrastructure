@@ -234,6 +234,14 @@ locals {
     { name = "admin-announcements-create", description = "Admin: create a league_announcements row (body: title, body, priority, expires_at?, is_active?, display_order?)", path_part = "announcements-create", http_method = "POST" },
     { name = "admin-announcements-update", description = "Admin: patch an allowlisted-field subset of a league_announcements row (body: id, fields)", path_part = "announcements-update", http_method = "POST" },
     { name = "admin-announcements-delete", description = "Admin: soft-delete a league_announcements row by id (sets is_active=false; body: id)", path_part = "announcements-delete", http_method = "POST" },
+
+    # Sleeper claim audit. Linking is unverified by design -- Sleeper has no
+    # OAuth -- so more than one platform user can claim the same handle. Users
+    # are never told; this is how an admin sees it. Backend dir:
+    #   lambdas/api_admin_sleeper_claims/  -> xomper-api-admin-sleeper-claims
+    # Gated on the cognito:groups admin claim in the handler, not the old
+    # whitelisted_users row. IAM: existing table/xomper* wildcard covers it.
+    { name = "admin-sleeper-claims", description = "Admin: linked Sleeper accounts grouped by handle, contested claims first", path_part = "sleeper-claims", http_method = "GET" },
   ]
 }
 
