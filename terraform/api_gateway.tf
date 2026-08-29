@@ -1,7 +1,22 @@
 # API Gateway Account (singleton per AWS account)
-resource "aws_api_gateway_account" "api_gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
-}
+## API Gateway Account (account-level singleton) — INTENTIONALLY NOT MANAGED HERE
+#
+# `aws_api_gateway_account` is ONE setting per AWS account per region. Seven app
+# repos in this account were each managing it and each pointing
+# `cloudwatch_role_arn` at their OWN `<app>-api_gateway-logs` role, so every
+# apply flipped the account's logging role and the next repo's plan flipped it
+# back — perpetual drift on every plan, in every repo.
+#
+# A shared singleton needs a single owner. `xomware-infrastructure` owns it now
+# (its `api_gateway_account.tf`), which is where xomtracks and today-in-sports
+# had already said it belonged. This repo defers.
+#
+# Removing the resource is safe: the provider's destroy of
+# `aws_api_gateway_account` is a no-op, because there is no AWS API to reset
+# account settings. The live setting is left intact and simply drops out of this
+# repo's state. The `api_gateway_cloudwatch` role is retained — the live pointer
+# may still name it, and deleting a role that is still pointed at would break
+# account-wide API Gateway logging.
 
 locals {
   email_endpoints = [
