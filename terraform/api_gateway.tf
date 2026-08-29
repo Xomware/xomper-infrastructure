@@ -73,6 +73,12 @@ locals {
       invoke_arn  = aws_lambda_function.users_me.invoke_arn
     },
     {
+      name        = "users-me-display-name"
+      path_part   = "display-name"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.users_me.invoke_arn
+    },
+    {
       name        = "users-me-sleeper-link"
       path_part   = "sleeper-link"
       http_method = "PUT"
