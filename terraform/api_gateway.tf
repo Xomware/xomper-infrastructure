@@ -62,6 +62,17 @@ locals {
     }
   ]
 
+  # Nightly ADP snapshot, shown on the draft board as context rather than as
+  # a prediction.
+  adp_endpoints = [
+    {
+      name        = "adp-current"
+      path_part   = "current"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.adp_current.invoke_arn
+    }
+  ]
+
   # ESPN reads, plus connecting and revoking the caller's ESPN cookies. One
   # Lambda behind all three, so the invoke_arn repeats.
   espn_endpoints = [
@@ -206,6 +217,10 @@ module "api" {
     espn = {
       path_prefix = "espn"
       endpoints   = local.espn_endpoints
+    }
+    adp = {
+      path_prefix = "adp"
+      endpoints   = local.adp_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
