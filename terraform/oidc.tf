@@ -124,17 +124,31 @@ resource "aws_iam_role_policy" "github_actions_frontend" {
 
 data "aws_iam_policy_document" "github_actions_backend" {
   statement {
-    sid    = "ManageSharedLayer"
+    sid    = "PublishSharedLayer"
     effect = "Allow"
     actions = [
       "lambda:PublishLayerVersion",
       "lambda:ListLayerVersions",
-      "lambda:GetLayerVersion",
     ]
     resources = [
       "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:layer:${var.app_name}-shared-packages",
       "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:layer:${var.app_name}-shared-packages:*",
     ]
+  }
+
+  # UpdateFunctionConfiguration --layers needs GetLayerVersion on EVERY layer
+  # in the list it is given, not just the one being changed. Scoped to the
+  # shared layer alone, attaching it to a function that also carries
+  # xomper-duckdb was denied -- so api-values-compute silently kept an old
+  # shared layer through three deploys that all reported success.
+  #
+  # Read-only, and by name prefix like DeployFunctions below, so a new layer
+  # needs no IAM change. Publishing stays scoped to the shared layer above.
+  statement {
+    sid       = "ReadOwnLayers"
+    effect    = "Allow"
+    actions   = ["lambda:GetLayerVersion"]
+    resources = ["arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:layer:${var.app_name}-*:*"]
   }
 
   statement {
