@@ -168,6 +168,35 @@ locals {
     }
   ]
 
+  # Comment threads. A thread belongs to a target rather than to the caller,
+  # so this is its own service block rather than more of /me.
+  comments_endpoints = [
+    {
+      name        = "comments-list"
+      path_part   = "list"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.comments.invoke_arn
+    },
+    {
+      name        = "comments-add"
+      path_part   = "add"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.comments.invoke_arn
+    },
+    {
+      name        = "comments-delete"
+      path_part   = "delete"
+      http_method = "DELETE"
+      invoke_arn  = aws_lambda_function.comments.invoke_arn
+    },
+    {
+      name        = "comments-react"
+      path_part   = "react"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.comments.invoke_arn
+    }
+  ]
+
   # Public-read announcements endpoint(s). Filtered by exact name == "announcements"
   # so we do NOT accidentally include the four admin-announcements-* lambdas
   # (those live under the /admin/* service block above).
@@ -237,6 +266,10 @@ module "api" {
     me = {
       path_prefix = "me"
       endpoints   = local.me_endpoints
+    }
+    comments = {
+      path_prefix = "comments"
+      endpoints   = local.comments_endpoints
     }
     espn = {
       path_prefix = "espn"

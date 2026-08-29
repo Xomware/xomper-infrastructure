@@ -90,3 +90,52 @@ resource "aws_lambda_function" "users_friends" {
     aws_iam_role.lambda_role
   ]
 }
+
+###############################################################################
+# /comments — threads on a league, player, or trade
+#
+# Its own service block rather than more of /me: a thread belongs to a target,
+# not to the caller, and reads are open to any signed-in user because
+# everything a comment attaches to is already public.
+###############################################################################
+
+resource "aws_lambda_function" "comments" {
+  function_name    = "${var.app_name}-api-comments"
+  description      = "Comment threads: list, add, delete, react"
+  filename         = "./templates/lambda_stub.zip"
+  source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
+  handler          = "handler.handler"
+  layers           = [data.aws_lambda_layer_version.shared_latest.arn]
+  runtime          = var.lambda_runtime
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+  role             = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = local.lambda_variables
+  }
+
+  tracing_config {
+    mode = var.lambda_trace_mode
+  }
+
+  tags = merge(local.standard_tags, tomap({
+    "name"        = "${var.app_name}-api-comments"
+    "lambda_type" = "api"
+  }))
+
+  # Code is deployed from the backend repo; Terraform owns the shape only.
+  lifecycle {
+    ignore_changes = [
+      description,
+      filename,
+      source_code_hash,
+      layers
+    ]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.lambda_role_policy,
+    aws_iam_role.lambda_role
+  ]
+}
