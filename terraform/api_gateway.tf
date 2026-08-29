@@ -137,6 +137,30 @@ locals {
       invoke_arn  = aws_lambda_function.users_leagues.invoke_arn
     },
     {
+      name        = "users-me-friends"
+      path_part   = "friends"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.users_friends.invoke_arn
+    },
+    {
+      name        = "users-me-friend-request"
+      path_part   = "friend-request"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.users_friends.invoke_arn
+    },
+    {
+      name        = "users-me-friend-accept"
+      path_part   = "friend-accept"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.users_friends.invoke_arn
+    },
+    {
+      name        = "users-me-friend-remove"
+      path_part   = "friend-remove"
+      http_method = "DELETE"
+      invoke_arn  = aws_lambda_function.users_friends.invoke_arn
+    },
+    {
       name        = "users-me-unfollow"
       path_part   = "unfollow"
       http_method = "DELETE"
