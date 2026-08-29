@@ -62,6 +62,29 @@ locals {
     }
   ]
 
+  # ESPN reads, plus connecting and revoking the caller's ESPN cookies. One
+  # Lambda behind all three, so the invoke_arn repeats.
+  espn_endpoints = [
+    {
+      name        = "espn-league"
+      path_part   = "league"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.espn_league.invoke_arn
+    },
+    {
+      name        = "espn-connect"
+      path_part   = "connect"
+      http_method = "PUT"
+      invoke_arn  = aws_lambda_function.espn_league.invoke_arn
+    },
+    {
+      name        = "espn-disconnect"
+      path_part   = "disconnect"
+      http_method = "DELETE"
+      invoke_arn  = aws_lambda_function.espn_league.invoke_arn
+    }
+  ]
+
   # The current user's own record. One Lambda behind all three, so the
   # invoke_arn repeats — the module keys its resources on the endpoint name,
   # not the function.
@@ -179,6 +202,10 @@ module "api" {
     me = {
       path_prefix = "me"
       endpoints   = local.me_endpoints
+    }
+    espn = {
+      path_prefix = "espn"
+      endpoints   = local.espn_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
