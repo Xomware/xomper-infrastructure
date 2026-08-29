@@ -14,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  id-token: write # mint the OIDC token traded for the plan/apply role
   contents: read
   pull-requests: write
 
@@ -38,11 +39,13 @@ jobs:
         with:
           terraform_version: "1.10.5"
 
+      # Read-only for plans, admin only for an apply on master. Selecting the
+      # role by event means a pull request cannot assume the role that
+      # mutates, regardless of what the workflow later does.
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && secrets.AWS_TERRAFORM_APPLY_ROLE_ARN || secrets.AWS_TERRAFORM_PLAN_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
@@ -56,8 +59,6 @@ jobs:
         run: terraform plan -no-color -input=false
         continue-on-error: true
         env:
-          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_api_access_token: ${{ secrets.API_ACCESS_TOKEN }}
           TF_VAR_api_secret_key: ${{ secrets.API_SECRET_KEY }}
           TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
@@ -100,8 +101,6 @@ jobs:
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: terraform apply -auto-approve -input=false
         env:
-          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_api_access_token: ${{ secrets.API_ACCESS_TOKEN }}
           TF_VAR_api_secret_key: ${{ secrets.API_SECRET_KEY }}
           TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
