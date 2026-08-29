@@ -133,3 +133,26 @@ output "terraform_apply_role_arn" {
   description = "Admin role the Terraform workflow assumes only for an apply on the default branch"
   value       = aws_iam_role.terraform_apply.arn
 }
+
+# A plan takes the state lock, and ReadOnlyAccess cannot write DynamoDB. Without
+# this a plan fails on `Error acquiring the state lock` in any repo that does not
+# pass -lock=false. Locking is not mutating infrastructure -- it is the thing
+# that stops two runs from mutating it at once.
+data "aws_iam_policy_document" "terraform_plan_state_lock" {
+  statement {
+    sid    = "StateLock"
+    effect = "Allow"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+    ]
+    resources = ["arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/xomware-terraform-locks"]
+  }
+}
+
+resource "aws_iam_role_policy" "terraform_plan_state_lock" {
+  name   = "state-lock"
+  role   = aws_iam_role.terraform_plan.id
+  policy = data.aws_iam_policy_document.terraform_plan_state_lock.json
+}

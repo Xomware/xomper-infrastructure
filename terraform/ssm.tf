@@ -4,29 +4,6 @@
 # user (jarvis-agent) lacks ssm:AddTagsToResource/RemoveTagsToResource.
 # =============================================================================
 
-# AWS -- TODO: Remove these after OIDC migration (#75). Kept for now since
-# they may still be referenced by running services.
-resource "aws_ssm_parameter" "access_key" {
-  name        = "/${var.app_name}/aws/ACCESS_KEY"
-  description = "AWS Access Key -- remove after OIDC migration (#75)"
-  type        = "SecureString"
-  value       = var.access_key
-
-  lifecycle {
-    ignore_changes = [tags, tags_all]
-  }
-}
-
-resource "aws_ssm_parameter" "secret_key" {
-  name        = "/${var.app_name}/aws/SECRET_KEY"
-  description = "AWS Secret Key -- remove after OIDC migration (#75)"
-  type        = "SecureString"
-  value       = var.secret_key
-
-  lifecycle {
-    ignore_changes = [tags, tags_all]
-  }
-}
 
 # API
 resource "aws_ssm_parameter" "api_secret_key" {
