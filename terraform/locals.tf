@@ -30,6 +30,7 @@ locals {
 
     PLATFORM_USERS_TABLE   = aws_dynamodb_table.platform_users.name
     PLATFORM_FOLLOWS_TABLE = aws_dynamodb_table.platform_follows.name
+    SOCIAL_TABLE           = aws_dynamodb_table.social.name
   }
 
   # API GW
