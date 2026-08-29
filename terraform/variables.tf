@@ -216,3 +216,17 @@ variable "github_backend_subjects" {
     "repo:Xomware@263047999/xomper-backend@1054332117",
   ]
 }
+
+variable "github_infrastructure_subjects" {
+  description = "OIDC subject prefixes for this infrastructure repository"
+  type        = list(string)
+  default = [
+    "repo:Xomware/xomper-infrastructure",
+  ]
+}
+
+variable "default_branch" {
+  description = "Branch a push to which is allowed to run terraform apply"
+  type        = string
+  default     = "master"
+}
