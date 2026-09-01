@@ -88,6 +88,16 @@ locals {
     }
   ]
 
+  # Consensus rankings across FFC ADP, FantasyCalc and ESPN.
+  rankings_endpoints = [
+    {
+      name        = "rankings-current"
+      path_part   = "current"
+      http_method = "GET"
+      invoke_arn  = aws_lambda_function.rankings_current.invoke_arn
+    }
+  ]
+
   # The current user's own record. One Lambda behind all three, so the
   # invoke_arn repeats — the module keys its resources on the endpoint name,
   # not the function.
@@ -266,6 +276,10 @@ module "api" {
     adp = {
       path_prefix = "adp"
       endpoints   = local.adp_endpoints
+    }
+    rankings = {
+      path_prefix = "rankings"
+      endpoints   = local.rankings_endpoints
     }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
