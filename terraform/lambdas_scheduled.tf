@@ -88,6 +88,7 @@ locals {
       cron_expression = "cron(0 18 ? * WED *)" # Wed 18:00 UTC = 2pm EDT / 1pm EST
       # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
+      enabled           = false
     },
 
     # Week Preview (Phase 2). Wednesday-morning forward-looking
@@ -103,6 +104,7 @@ locals {
       cron_expression = "cron(0 14 ? * WED *)" # Wed 14:00 UTC = 9am ET
       # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
+      enabled           = false
     },
   ]
 
@@ -150,11 +152,17 @@ resource "aws_lambda_function" "scheduled" {
 }
 
 # 2. EventBridge rule per schedule
+# `enabled = false` turns a schedule off without removing the lambda, its
+# IAM, or its admin trigger. The two AI newsletters are off: they write a
+# league recap with Claude for the one whitelisted league, and Xomper is no
+# longer that one league's app. Deleting them instead would take the admin
+# re-fire button with them.
 resource "aws_cloudwatch_event_rule" "scheduled_notif" {
   for_each            = { for l in local.scheduled_lambdas : l.name => l }
   name                = "${var.app_name}-${each.value.name}-schedule"
   description         = "Schedule for ${each.value.name}: ${each.value.cron_expression}"
   schedule_expression = each.value.cron_expression
+  state               = try(each.value.enabled, true) ? "ENABLED" : "DISABLED"
 
   tags = merge(local.standard_tags, tomap({
     "name" = "${var.app_name}-${each.value.name}-schedule"
