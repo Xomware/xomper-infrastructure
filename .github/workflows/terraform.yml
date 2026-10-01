@@ -3,110 +3,20 @@ name: Terraform
 on:
   push:
     branches: [master]
-    paths: ['terraform/**', 'lambda/**']
+    paths: ['terraform/**', '.github/workflows/terraform.yml', 'lambda/**']
   pull_request:
     branches: [master]
-    paths: ['terraform/**', 'lambda/**']
+    paths: ['terraform/**', '.github/workflows/terraform.yml', 'lambda/**']
   workflow_dispatch:
 
-concurrency:
-  group: terraform-xomper-infrastructure
-  cancel-in-progress: false
-
 permissions:
-  id-token: write # mint the OIDC token traded for the plan/apply role
   contents: read
   pull-requests: write
-
-env:
-  TF_DIR: terraform
-  AWS_REGION: us-east-1
+  id-token: write
 
 jobs:
   terraform:
-    name: Terraform
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.TF_DIR }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: "1.10.5"
-
-      # Read-only for plans, admin only for an apply on master. Selecting the
-      # role by event means a pull request cannot assume the role that
-      # mutates, regardless of what the workflow later does.
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && secrets.AWS_TERRAFORM_APPLY_ROLE_ARN || secrets.AWS_TERRAFORM_PLAN_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color -input=false
-        continue-on-error: true
-        env:
-          TF_VAR_api_access_token: ${{ secrets.API_ACCESS_TOKEN }}
-          TF_VAR_api_secret_key: ${{ secrets.API_SECRET_KEY }}
-          TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
-          TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
-          TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          TF_VAR_apns_team_id: ${{ secrets.APNS_TEAM_ID }}
-          TF_VAR_apns_key_id: ${{ secrets.APNS_KEY_ID }}
-          TF_VAR_apns_platform_credential: ${{ secrets.APNS_PLATFORM_CREDENTIAL }}
-          TF_VAR_anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-
-      - name: Post Plan to PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const output = `#### Terraform Plan \`${{ steps.plan.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`terraform
-            ${{ steps.plan.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
-      - name: Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
-
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        run: terraform apply -auto-approve -input=false
-        env:
-          TF_VAR_api_access_token: ${{ secrets.API_ACCESS_TOKEN }}
-          TF_VAR_api_secret_key: ${{ secrets.API_SECRET_KEY }}
-          TF_VAR_supabase_url: ${{ secrets.SUPABASE_URL }}
-          TF_VAR_supabase_anon_key: ${{ secrets.SUPABASE_ANON_KEY }}
-          TF_VAR_supabase_service_key: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          TF_VAR_apns_team_id: ${{ secrets.APNS_TEAM_ID }}
-          TF_VAR_apns_key_id: ${{ secrets.APNS_KEY_ID }}
-          TF_VAR_apns_platform_credential: ${{ secrets.APNS_PLATFORM_CREDENTIAL }}
-          TF_VAR_anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    uses: Xomware/github-actions/.github/workflows/terraform.yml@v1
+    with:
+      app: xomper
+      terraform-version: "1.10.5"
