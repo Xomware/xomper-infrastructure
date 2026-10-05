@@ -231,7 +231,9 @@ module "api" {
   authorizer_role_arn = ""
   tags                = local.standard_tags
   allow_headers       = local.api_allow_headers
-  allow_origin        = "https://${local.domain_name}"
+  # Comma-delimited; the module echoes whichever origin matches. The first
+  # entry is also the one gateway error responses (401/403/5xx) carry.
+  allow_origin = "https://${local.domain_name},https://clt.dynasty.xomware.com"
 
   domain_name     = local.api_domain_name
   certificate_arn = aws_acm_certificate_validation.api.certificate_arn

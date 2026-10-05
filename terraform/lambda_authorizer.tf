@@ -11,8 +11,12 @@ resource "aws_lambda_function" "authorizer" {
   timeout          = var.authorizer_timeout
   role             = aws_iam_role.authorizer_role.arn
 
+  # Only the authorizer reads the CLT client id. Adding it to
+  # local.lambda_variables would update every Lambda in place for nothing.
   environment {
-    variables = local.lambda_variables
+    variables = merge(local.lambda_variables, {
+      COGNITO_CLT_CLIENT_ID = var.cognito_clt_client_id
+    })
   }
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-authorizer" }))
 
