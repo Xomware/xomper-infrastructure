@@ -283,6 +283,10 @@ module "api" {
       path_prefix = "rankings"
       endpoints   = local.rankings_endpoints
     }
+    clt = {
+      path_prefix = "clt"
+      endpoints   = local.clt_endpoints
+    }
     # New API services (profiles, rules, etc.) will be added during Supabase migration
   }
 }

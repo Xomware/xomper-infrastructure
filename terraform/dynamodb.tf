@@ -463,3 +463,30 @@ resource "aws_dynamodb_table" "device_tokens" {
 
   tags = merge(local.standard_tags, { "name" = "${var.app_name}-device-tokens" })
 }
+
+# --- CLT Settings ---
+# One item keyed by a constant, not the season's league id, so it survives
+# Sleeper's yearly league renewal. A missing item reads as the defaults
+# (emailNotifications off), so Terraform creates no item.
+resource "aws_dynamodb_table" "clt_settings" {
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-clt-settings"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = local.dynamodb_kms_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  tags = merge(local.standard_tags, { "name" = "${var.app_name}-clt-settings" })
+}
