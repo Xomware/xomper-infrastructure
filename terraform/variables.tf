@@ -181,6 +181,12 @@ variable "cognito_client_id" {
   default     = "38e5sjavoa76ghbl5hpjsapc49"
 }
 
+variable "cognito_clt_client_id" {
+  description = "clt-client app client id on the shared pool (CLT Dynasty)"
+  type        = string
+  default     = "481dfniqtuh8062gjqr1o1u469"
+}
+
 # Read these off the repo, never build them from a name:
 #   gh api /repos/<org>/<repo>/actions/oidc/customization/sub -q .sub_claim_prefix
 # GitHub uses immutable numeric identifiers on newer repos, and it reports the
