@@ -61,34 +61,31 @@ locals {
       # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
     },
-    # AI Review (F3) — weekly recap cron.
-    # Fires Tue 18:00 UTC, which lands post-MNF (~23:30 ET Mon) so Sleeper's
-    # nfl_state.week has incremented, and several hours past `notif-weekly-recap`
-    # so the two products land separately in inboxes.
+    # AI Review (F3) — weekly recap for CLT Dynasty's site. Writes the report
+    # to xomper-ai-reports and nothing else: AI_REVIEW_WEEKLY_DELIVER=false
+    # means no email and no push, since Xomper is no longer the league's app.
     #
-    # Cron expression is in UTC because aws_cloudwatch_event_rule does NOT
-    # support schedule_timezone (see the TODO at the top of this file — the
-    # schedule_timezone attribute below is silently ignored by AWS). To get
-    # ET-aware behavior without migrating resources we encode the UTC time
-    # directly, which means DST drift is acceptable for this cron:
-    #   - 18:00 UTC = 14:00 EDT during EDT window (Mar–Nov, regular season)
-    #   - 18:00 UTC = 13:00 EST during EST window (Nov–Mar, playoffs)
-    # Both windows are post-lunch Tuesday — fine for a weekly newsletter.
+    # Tue 13:13 UTC = 9:13am EDT / 8:13am EST, after Monday Night Football.
+    # The Wednesday fire is a retry for a Tuesday where Sleeper hadn't rolled
+    # nfl_state.week yet; the handler skips a period that already exists, so
+    # it costs a Sleeper read and no Claude call.
     #
-    # IAM coverage: existing wildcards in iam_lambdas.tf cover the new
-    # function name + Dynamo R/W on xomper-ai-memories / xomper-ai-reports.
+    # IAM coverage: existing wildcards in iam_lambdas.tf cover the function
+    # name + Dynamo R/W on xomper-ai-memories / xomper-ai-reports.
     {
-      name        = "notif-ai-review-weekly"
-      handler_dir = "notif_ai_review_weekly"
-      description = "Wednesday afternoon: AI-generated weekly league recap (Claude Haiku)"
-      # Moved from Tue 18:00 -> Wed 18:00 UTC so the Wed-morning Week
-      # Preview (9am ET) gets the morning slot and the AI recap follows
-      # later that afternoon — keeps Tuesday from being inbox-spammed
-      # (Tue already has data recap 9am + WC push 10am).
-      cron_expression = "cron(0 18 ? * WED *)" # Wed 18:00 UTC = 2pm EDT / 1pm EST
+      name            = "notif-ai-review-weekly"
+      handler_dir     = "notif_ai_review_weekly"
+      description     = "Tuesday morning: AI-generated weekly league recap for the CLT site (stored, not emailed)"
+      cron_expression = "cron(13 13 ? * TUE,WED *)" # Tue+Wed 13:13 UTC = 9:13am EDT / 8:13am EST
       # ignored by aws_cloudwatch_event_rule — UTC cron is the source of truth
       schedule_timezone = "America/New_York"
-      enabled           = false
+      # Sonnet over Haiku: Haiku misstated sums and misnamed managers in the
+      # W04 comparison. Sonnet takes ~25s, so 60s leaves no room for a retry.
+      timeout = 180
+      env = {
+        AI_REVIEW_WEEKLY_MODEL   = "claude-sonnet-5-5"
+        AI_REVIEW_WEEKLY_DELIVER = "false"
+      }
     },
 
     # Week Preview (Phase 2). Wednesday-morning forward-looking
@@ -124,11 +121,11 @@ resource "aws_lambda_function" "scheduled" {
   layers           = [data.aws_lambda_layer_version.shared_latest.arn]
   runtime          = var.lambda_runtime
   memory_size      = var.lambda_memory_size
-  timeout          = 60 # scheduled jobs do more work; allow more headroom
+  timeout          = try(each.value.timeout, 60)
   role             = aws_iam_role.lambda_role.arn
 
   environment {
-    variables = local.scheduled_lambda_variables
+    variables = merge(local.scheduled_lambda_variables, try(each.value.env, {}))
   }
 
   tracing_config {
@@ -153,10 +150,9 @@ resource "aws_lambda_function" "scheduled" {
 
 # 2. EventBridge rule per schedule
 # `enabled = false` turns a schedule off without removing the lambda, its
-# IAM, or its admin trigger. The two AI newsletters are off: they write a
-# league recap with Claude for the one whitelisted league, and Xomper is no
-# longer that one league's app. Deleting them instead would take the admin
-# re-fire button with them.
+# IAM, or its admin trigger. The week preview is off: Xomper is no longer the
+# whitelisted league's app and the CLT site only runs the weekly recap.
+# Deleting it instead would take the admin re-fire button with it.
 resource "aws_cloudwatch_event_rule" "scheduled_notif" {
   for_each            = { for l in local.scheduled_lambdas : l.name => l }
   name                = "${var.app_name}-${each.value.name}-schedule"
